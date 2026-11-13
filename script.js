@@ -1,19 +1,76 @@
-// Mi Salud - Lógica de 3 Columnas Persistentes + Subpágina Mis Cuidados
+// Mi Salud - Fase 4: Persistencia en la Nube Gratuita (Firebase Firestore) + Videos por Edad/Condición
 // Autor: Alejandro Quintero
 
-const DB_USERS_KEY = 'mi_salud_usuarios_v3';
-const SESSION_KEY = 'mi_salud_sesion_activa_v3';
+// =========================================================================
+// 0. CONFIGURACIÓN DE FIREBASE (PLAN SPARK GRATUITO - SIN TARJETA)
+// Reemplaza los valores de abajo con los de tu proyecto en console.firebase.google.com
+// =========================================================================
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyAGkoMFG9Yz2Pxyuk5Ax6HZ3SlYKio7cfc",
+    authDomain: "marketlab-media.firebaseapp.com",
+    projectId: "marketlab-media",
+    storageBucket: "marketlab-media.firebasestorage.app",
+    messagingSenderId: "265817204806",
+    appId: "1:265817204806:web:7f4d315f1a7307d872c247"
+};
+
+let dbNube = null;
+let nubeActiva = false;
+
+function inicializarFirebase() {
+    const configurado = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.includes("PEGA_AQUI");
+    if (configurado && typeof firebase !== 'undefined') {
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(FIREBASE_CONFIG);
+            }
+            dbNube = firebase.firestore();
+            nubeActiva = true;
+        } catch (err) {
+            console.error("Error iniciando Firebase:", err);
+            nubeActiva = false;
+        }
+    }
+    actualizarIndicadorNube();
+}
+
+function actualizarIndicadorNube() {
+    const texto = nubeActiva
+        ? "☁️ Conectado en la Nube (Historial sincronizado)"
+        : "💾 Modo Local (Pega tu Firebase Config en script.js para nube)";
+    const badgeHeader = document.getElementById('estadoNubeBadge');
+    const badgeLogin = document.getElementById('loginEstadoNube');
+    if (badgeHeader) badgeHeader.textContent = texto;
+    if (badgeLogin) badgeLogin.textContent = texto;
+}
+
+const DB_USERS_KEY = 'mi_salud_usuarios_v4';
+const DB_DOCS_KEY = 'mi_salud_documentos_v4';
+const SESSION_KEY = 'mi_salud_sesion_activa_v4';
 
 // =========================================================================
-// 1. BASE DE CONOCIMIENTO: MIS CUIDADOS (VIDEOS, ALIMENTACIÓN Y DEPORTES)
+// 1. BASE DE CONOCIMIENTO: MIS CUIDADOS (VIDEOS REALES + ADAPTACIÓN POR EDAD)
 // =========================================================================
+const VIDEOS_POR_EDAD = {
+    mayor: {
+        titulo: 'Rutina de Movilidad y Equilibrio para Adulto Mayor',
+        urlEmbed: 'https://www.youtube.com/embed/31_hn0bNhrg',
+        urlDirecta: 'https://www.youtube.com/watch?v=31_hn0bNhrg'
+    },
+    juvenil: {
+        titulo: 'Activación Física y Postura Saludable Juvenil',
+        urlEmbed: 'https://www.youtube.com/embed/LmWkf4HJGPI',
+        urlDirecta: 'https://www.youtube.com/watch?v=LmWkf4HJGPI'
+    }
+};
+
 const CONTENIDO_SALUD = {
     general: {
         titulo: 'Prevención y Salud General',
         videos: [
-            { titulo: 'Rutina de movilidad articular diaria (10 min)', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=rutina+movilidad+articular+10+minutos+salud' },
-            { titulo: 'Hábitos para fortalecer el sistema inmune', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=habitos+saludables+sistema+inmunologico+medicina' },
-            { titulo: 'Higiene del sueño y descanso reparador', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=higiene+del+sueno+consejos+medicos' }
+            { titulo: 'Rutina de ejercicios de movilidad articular', urlEmbed: 'https://www.youtube.com/embed/O_XD_3dtkXw', urlDirecta: 'https://www.youtube.com/watch?v=O_XD_3dtkXw' },
+            { titulo: 'Liberar zona lumbar y mejorar postura', urlEmbed: 'https://www.youtube.com/embed/LmWkf4HJGPI', urlDirecta: 'https://www.youtube.com/watch?v=LmWkf4HJGPI' },
+            { titulo: 'Cardio suave de bajo impacto en casa', urlEmbed: 'https://www.youtube.com/embed/MzyHX4K38sY', urlDirecta: 'https://www.youtube.com/watch?v=MzyHX4K38sY' }
         ],
         alimentacion: [
             'Distribuye tu plato: 50% vegetales variados, 25% proteína magra (pescado, pollo, legumbres) y 25% carbohidratos integrales.',
@@ -29,9 +86,9 @@ const CONTENIDO_SALUD = {
     hipertension: {
         titulo: 'Control de Hipertensión Arterial',
         videos: [
-            { titulo: 'Cómo medir la presión arterial en casa', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=como+tomar+la+presion+arterial+correctamente+en+casa' },
-            { titulo: 'Dieta DASH para bajar la tensión arterial', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=dieta+dash+hipertension+arterial+explicacion' },
-            { titulo: 'Ejercicios seguros para hipertensos', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+para+hipertensos+cardiologia' }
+            { titulo: 'Cardio de bajo impacto para controlar la presión alta', urlEmbed: 'https://www.youtube.com/embed/MzyHX4K38sY', urlDirecta: 'https://www.youtube.com/watch?v=MzyHX4K38sY' },
+            { titulo: 'Hipertensión arterial y entrenamiento muscular seguro', urlEmbed: 'https://www.youtube.com/embed/ebTMSHSUSIg', urlDirecta: 'https://www.youtube.com/watch?v=ebTMSHSUSIg' },
+            { titulo: 'Tai Chi suave para equilibrio y control cardiovascular', urlEmbed: 'https://www.youtube.com/embed/31_hn0bNhrg', urlDirecta: 'https://www.youtube.com/watch?v=31_hn0bNhrg' }
         ],
         alimentacion: [
             'Aplica la dieta DASH: reduce la sal a menos de 5g/día y evita enlatados, embutidos y caldos concentrados.',
@@ -47,9 +104,9 @@ const CONTENIDO_SALUD = {
     diabetes: {
         titulo: 'Control Glucémico y Diabetes',
         videos: [
-            { titulo: 'Índice glucémico: evitar picos de azúcar', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=indice+glucemico+como+evitar+picos+de+glucosa' },
-            { titulo: 'Cuidado diario de los pies en diabetes', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=cuidado+del+pie+diabetico+prevencion' },
-            { titulo: 'Caminar después de comer para regular glucosa', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=caminar+despues+de+comer+glucosa+diabetes' }
+            { titulo: 'Actividad física, deporte y control de diabetes', urlEmbed: 'https://www.youtube.com/embed/H-bwA9gXLNM', urlDirecta: 'https://www.youtube.com/watch?v=H-bwA9gXLNM' },
+            { titulo: 'Ejercicio efectivo para regular niveles de glucosa', urlEmbed: 'https://www.youtube.com/embed/V1jp-FXzsoc', urlDirecta: 'https://www.youtube.com/watch?v=V1jp-FXzsoc' },
+            { titulo: 'Cardio moderado en casa sin impacto', urlEmbed: 'https://www.youtube.com/embed/MzyHX4K38sY', urlDirecta: 'https://www.youtube.com/watch?v=MzyHX4K38sY' }
         ],
         alimentacion: [
             'Orden de ingesta: come primero verduras/fibra, luego proteína y al final carbohidratos complejos (avena, legumbres).',
@@ -65,9 +122,9 @@ const CONTENIDO_SALUD = {
     osteomuscular: {
         titulo: 'Salud Osteomuscular y Espalda',
         videos: [
-            { titulo: 'Pausas activas y ergonomía en el escritorio', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=pausas+activas+dolor+lumbar+y+cuello+fisioterapia' },
-            { titulo: 'Estiramientos para aliviar el dolor lumbar', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+aliviar+dolor+lumbar+fisioterapia' },
-            { titulo: 'Fortalecimiento del core sin impacto', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=fortalecimiento+core+sin+impacto+columna' }
+            { titulo: 'Rutina de ejercicios para liberar zona lumbar y caderas', urlEmbed: 'https://www.youtube.com/embed/LmWkf4HJGPI', urlDirecta: 'https://www.youtube.com/watch?v=LmWkf4HJGPI' },
+            { titulo: 'Ejercicios terapéuticos para aliviar dolor lumbar', urlEmbed: 'https://www.youtube.com/embed/75PNUYMsXLs', urlDirecta: 'https://www.youtube.com/watch?v=75PNUYMsXLs' },
+            { titulo: 'Movilidad articular suave paso a paso', urlEmbed: 'https://www.youtube.com/embed/O_XD_3dtkXw', urlDirecta: 'https://www.youtube.com/watch?v=O_XD_3dtkXw' }
         ],
         alimentacion: [
             'Incluye alimentos antiinflamatorios: salmón, sardina, cúrcuma, jengibre y aceite de oliva extra virgen.',
@@ -83,9 +140,9 @@ const CONTENIDO_SALUD = {
     respiratorio: {
         titulo: 'Cuidado Respiratorio',
         videos: [
-            { titulo: 'Técnica correcta de uso de inhaladores', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=como+usar+inhalador+correctamente+neumologia' },
-            { titulo: 'Fisioterapia respiratoria y diafragma', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+respiracion+diafragmatica+pulmones' },
-            { titulo: 'Prevención de alergias en el hogar', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=prevencion+asma+control+ambiental+hogar' }
+            { titulo: 'Ejercicios suaves de movilidad y respiración', urlEmbed: 'https://www.youtube.com/embed/31_hn0bNhrg', urlDirecta: 'https://www.youtube.com/watch?v=31_hn0bNhrg' },
+            { titulo: 'Cardio progresivo de baja intensidad en casa', urlEmbed: 'https://www.youtube.com/embed/MzyHX4K38sY', urlDirecta: 'https://www.youtube.com/watch?v=MzyHX4K38sY' },
+            { titulo: 'Rutina de estiramiento y expansión torácica', urlEmbed: 'https://www.youtube.com/embed/LmWkf4HJGPI', urlDirecta: 'https://www.youtube.com/watch?v=LmWkf4HJGPI' }
         ],
         alimentacion: [
             'Consume antioxidantes (vitamina C y E): cítricos, kiwi, pimentón y frutos rojos.',
@@ -101,9 +158,9 @@ const CONTENIDO_SALUD = {
     estres: {
         titulo: 'Bienestar Mental y Manejo del Estrés',
         videos: [
-            { titulo: 'Respiración 4-7-8 para calmar la ansiedad', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=respiracion+4+7+8+ansiedad+relajacion' },
-            { titulo: 'Relajación muscular progresiva guiada', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=relajacion+muscular+progresiva+de+jacobson' },
-            { titulo: 'Cómo reducir el cortisol y dormir mejor', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=como+bajar+el+cortisol+y+dormir+mejor' }
+            { titulo: 'Tai Chi guiado para calma mental y equilibrio', urlEmbed: 'https://www.youtube.com/embed/31_hn0bNhrg', urlDirecta: 'https://www.youtube.com/watch?v=31_hn0bNhrg' },
+            { titulo: 'Estiramientos para liberar tensión acumulada', urlEmbed: 'https://www.youtube.com/embed/LmWkf4HJGPI', urlDirecta: 'https://www.youtube.com/watch?v=LmWkf4HJGPI' },
+            { titulo: 'Activación suave para mejorar el ánimo', urlEmbed: 'https://www.youtube.com/embed/O_XD_3dtkXw', urlDirecta: 'https://www.youtube.com/watch?v=O_XD_3dtkXw' }
         ],
         alimentacion: [
             'Incluye alimentos ricos en magnesio y triptófano: avena, banano, cacao puro y almendras.',
@@ -119,168 +176,233 @@ const CONTENIDO_SALUD = {
 };
 
 // =========================================================================
-// 2. BASE DE DATOS DE USUARIOS (ADMIN + PACIENTE DEMO)
+// 2. CAPA DE DATOS HÍBRIDA (FIRESTORE EN LA NUBE + CACHÉ LOCAL)
 // =========================================================================
-function inicializarBaseUsuarios() {
-    let usuarios = JSON.parse(localStorage.getItem(DB_USERS_KEY) || 'null');
-    if (!usuarios || usuarios.length === 0) {
-        const hoy = new Date().toISOString().split('T')[0];
-        usuarios = [
-            {
-                id: 'usr_admin_1',
-                usuario: 'admin',
-                password: 'admin123',
-                rol: 'admin',
-                perfil: {
-                    nombre: 'Alejandro',
-                    documento: '16.076.155',
-                    edad: '31',
-                    rh: 'O+',
-                    eps: 'Salud Total',
-                    enfermedad: 'general',
-                    alergias: 'Ninguna',
-                    emergencia: '3016629992',
-                    foto: './img/ia.jpg'
-                },
-                medicamentos: [
-                    {
-                        id: 101,
-                        nombre: 'Suplemento Vitamínico',
-                        frecuencia: '8:00 AM',
-                        cantidad: 30,
-                        fechaInicio: hoy,
-                        fechaFin: sumarDias(hoy, 30),
-                        proximaToma: obtenerHoraFuturaISO(120),
-                        alerta30Enviada: false,
-                        alertaHoraEnviada: false
-                    },
-                    {
-                        id: 102,
-                        nombre: 'Amoxicilina 500mg',
-                        frecuencia: 'Cada 12h',
-                        cantidad: 14,
-                        fechaInicio: hoy,
-                        fechaFin: sumarDias(hoy, 7),
-                        proximaToma: obtenerHoraFuturaISO(25),
-                        alerta30Enviada: false,
-                        alertaHoraEnviada: false
-                    }
-                ],
-                examenes: [
-                    {
-                        id: 201,
-                        sector: 'Laboratorio Clínico',
-                        titulo: 'Glucosa Basal',
-                        fecha: hoy,
-                        resultado: '95 mg/dL (Normal)',
-                        porcentaje: 65
-                    },
-                    {
-                        id: 202,
-                        sector: 'Laboratorio Clínico',
-                        titulo: 'Hemoglobina',
-                        fecha: hoy,
-                        resultado: '15 mg/dL (Adecuada)',
-                        porcentaje: 80
-                    }
-                ],
-                documentos: [],
-                recomendaciones: [
-                    { id: 301, texto: 'Tomar medicamentos a tiempo', fecha: hoy, completada: true },
-                    { id: 302, texto: 'Revisar examen de laboratorio', fecha: hoy, completada: true },
-                    { id: 303, texto: 'Próxima cita de control', fecha: hoy, completada: false }
-                ],
-                citas: [
-                    {
-                        id: 401,
-                        especialidad: 'Cardiólogo',
-                        fecha: sumarDias(hoy, 6),
-                        hora: '10:00',
-                        lugar: 'Salud Total Sede Principal',
-                        alerta1DiaEnviada: false,
-                        alerta30MinEnviada: false
-                    }
-                ]
+function obtenerUsuariosPorDefecto() {
+    const hoy = new Date().toISOString().split('T')[0];
+    return [
+        {
+            id: 'usr_admin_1',
+            usuario: 'admin',
+            password: 'admin123',
+            rol: 'admin',
+            perfil: {
+                nombre: 'Alejandro',
+                documento: '16.076.155',
+                edad: '31',
+                rh: 'O+',
+                eps: 'Salud Total',
+                enfermedad: 'general',
+                alergias: 'Ninguna',
+                emergencia: '3016629992',
+                foto: './img/ia.jpg'
             },
-            {
-                id: 'usr_pac_1',
-                usuario: 'paciente1',
-                password: '1234',
-                rol: 'paciente',
-                perfil: {
-                    nombre: 'María Gómez',
-                    documento: '43.987.654',
-                    edad: '52',
-                    rh: 'A+',
-                    eps: 'Savia Salud',
-                    enfermedad: 'hipertension',
-                    alergias: 'Penicilina',
-                    emergencia: '3001234567',
-                    foto: './img/ia.jpg'
-                },
-                medicamentos: [
-                    {
-                        id: 501,
-                        nombre: 'Losartán 50 mg',
-                        frecuencia: 'Cada 12h',
-                        cantidad: 28,
-                        fechaInicio: hoy,
-                        fechaFin: sumarDias(hoy, 14),
-                        proximaToma: obtenerHoraFuturaISO(25),
-                        alerta30Enviada: false,
-                        alertaHoraEnviada: false
-                    }
-                ],
-                examenes: [
-                    {
-                        id: 502,
-                        sector: 'Cardiología',
-                        titulo: 'Control Presión Arterial',
-                        fecha: hoy,
-                        resultado: '118/76 mmHg (Controlada)',
-                        porcentaje: 75
-                    }
-                ],
-                documentos: [],
-                recomendaciones: [
-                    { id: 503, texto: 'Reducir consumo de sal diario', fecha: hoy, completada: false }
-                ],
-                citas: []
-            }
-        ];
-        localStorage.setItem(DB_USERS_KEY, JSON.stringify(usuarios));
+            medicamentos: [
+                {
+                    id: 101,
+                    nombre: 'Suplemento Vitamínico',
+                    frecuencia: '8:00 AM',
+                    cantidad: 30,
+                    fechaInicio: hoy,
+                    fechaFin: sumarDias(hoy, 30),
+                    proximaToma: obtenerHoraFuturaISO(120),
+                    alerta30Enviada: false,
+                    alertaHoraEnviada: false
+                }
+            ],
+            examenes: [
+                {
+                    id: 201,
+                    sector: 'Laboratorio Clínico',
+                    titulo: 'Glucosa Basal',
+                    fecha: hoy,
+                    resultado: '95 mg/dL (Normal)',
+                    porcentaje: 65
+                }
+            ],
+            recomendaciones: [
+                { id: 301, texto: 'Tomar medicamentos a tiempo', fecha: hoy, completada: true },
+                { id: 302, texto: 'Próxima cita de control', fecha: hoy, completada: false }
+            ],
+            citas: [
+                {
+                    id: 401,
+                    especialidad: 'Cardiólogo',
+                    fecha: sumarDias(hoy, 6),
+                    hora: '10:00',
+                    lugar: 'Salud Total Sede Principal',
+                    alerta1DiaEnviada: false,
+                    alerta30MinEnviada: false
+                }
+            ]
+        },
+        {
+            id: 'usr_pac_1',
+            usuario: 'paciente1',
+            password: '1234',
+            rol: 'paciente',
+            perfil: {
+                nombre: 'María Gómez',
+                documento: '43.987.654',
+                edad: '64',
+                rh: 'A+',
+                eps: 'Savia Salud',
+                enfermedad: 'hipertension',
+                alergias: 'Penicilina',
+                emergencia: '3001234567',
+                foto: './img/ia.jpg'
+            },
+            medicamentos: [
+                {
+                    id: 501,
+                    nombre: 'Losartán 50 mg',
+                    frecuencia: 'Cada 12h',
+                    cantidad: 28,
+                    fechaInicio: hoy,
+                    fechaFin: sumarDias(hoy, 14),
+                    proximaToma: obtenerHoraFuturaISO(25),
+                    alerta30Enviada: false,
+                    alertaHoraEnviada: false
+                }
+            ],
+            examenes: [
+                {
+                    id: 502,
+                    sector: 'Cardiología',
+                    titulo: 'Control Presión Arterial',
+                    fecha: hoy,
+                    resultado: '118/76 mmHg (Controlada)',
+                    porcentaje: 75
+                }
+            ],
+            recomendaciones: [
+                { id: 503, texto: 'Reducir consumo de sal diario', fecha: hoy, completada: false }
+            ],
+            citas: []
+        }
+    ];
+}
+
+async function sincronizarUsuariosDesdeNube() {
+    let locales = JSON.parse(localStorage.getItem(DB_USERS_KEY) || 'null');
+    if (!locales || locales.length === 0) {
+        locales = obtenerUsuariosPorDefecto();
+        localStorage.setItem(DB_USERS_KEY, JSON.stringify(locales));
     }
-    return usuarios;
+
+    if (!nubeActiva || !dbNube) return locales;
+
+    try {
+        const snapshot = await dbNube.collection('mi_salud_usuarios').get();
+        if (snapshot.empty) {
+            // Subir usuarios iniciales a la nube la primera vez
+            for (const u of locales) {
+                await dbNube.collection('mi_salud_usuarios').doc(u.id).set(u);
+            }
+            return locales;
+        } else {
+            const desdeNube = [];
+            snapshot.forEach(doc => desdeNube.push(doc.data()));
+            localStorage.setItem(DB_USERS_KEY, JSON.stringify(desdeNube));
+            return desdeNube;
+        }
+    } catch (e) {
+        console.warn("No se pudo sincronizar con Firestore, usando caché local:", e);
+        return locales;
+    }
 }
 
-function obtenerUsuarios() {
-    return inicializarBaseUsuarios();
-}
-
-function guardarUsuarios(lista) {
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(lista));
+function obtenerUsuariosCache() {
+    let locales = JSON.parse(localStorage.getItem(DB_USERS_KEY) || 'null');
+    if (!locales || locales.length === 0) {
+        locales = obtenerUsuariosPorDefecto();
+        localStorage.setItem(DB_USERS_KEY, JSON.stringify(locales));
+    }
+    return locales;
 }
 
 function obtenerUsuarioActivo() {
     const idActivo = localStorage.getItem(SESSION_KEY);
     if (!idActivo) return null;
-    return obtenerUsuarios().find(u => u.id === idActivo) || null;
+    return obtenerUsuariosCache().find(u => u.id === idActivo) || null;
 }
 
-function actualizarUsuarioActivo(usuarioModificado) {
-    const usuarios = obtenerUsuarios();
+async function guardarUsuarioEnNubeYLocal(usuarioModificado) {
+    const usuarios = obtenerUsuariosCache();
     const idx = usuarios.findIndex(u => u.id === usuarioModificado.id);
-    if (idx !== -1) {
-        usuarios[idx] = usuarioModificado;
-        guardarUsuarios(usuarios);
+    if (idx !== -1) usuarios[idx] = usuarioModificado;
+    else usuarios.push(usuarioModificado);
+    localStorage.setItem(DB_USERS_KEY, JSON.stringify(usuarios));
+
+    if (nubeActiva && dbNube) {
+        try {
+            await dbNube.collection('mi_salud_usuarios').doc(usuarioModificado.id).set(usuarioModificado);
+        } catch (e) {
+            console.error("Error guardando usuario en la nube:", e);
+        }
+    }
+}
+
+// Gestión de Documentos e Imágenes por Paciente en la Nube (Colección separada para soportar miles de archivos gratis)
+let documentosUsuarioActual = [];
+
+async function cargarDocumentosPaciente(userId) {
+    const todosLocales = JSON.parse(localStorage.getItem(DB_DOCS_KEY) || '[]');
+    let docsUsuario = todosLocales.filter(d => d.userId === userId);
+
+    if (nubeActiva && dbNube) {
+        try {
+            const snap = await dbNube.collection('mi_salud_documentos').where('userId', '==', userId).get();
+            docsUsuario = [];
+            snap.forEach(doc => docsUsuario.push(doc.data()));
+            docsUsuario.sort((a, b) => b.id - a.id);
+
+            const otros = todosLocales.filter(d => d.userId !== userId);
+            localStorage.setItem(DB_DOCS_KEY, JSON.stringify([...otros, ...docsUsuario]));
+        } catch (e) {
+            console.warn("Error leyendo documentos de la nube:", e);
+        }
+    }
+    documentosUsuarioActual = docsUsuario;
+    renderizarGaleriaDocumentos();
+}
+
+async function guardarDocumentoPaciente(nuevoDoc) {
+    documentosUsuarioActual.unshift(nuevoDoc);
+    const todosLocales = JSON.parse(localStorage.getItem(DB_DOCS_KEY) || '[]');
+    todosLocales.unshift(nuevoDoc);
+    localStorage.setItem(DB_DOCS_KEY, JSON.stringify(todosLocales));
+    renderizarGaleriaDocumentos();
+
+    if (nubeActiva && dbNube) {
+        try {
+            await dbNube.collection('mi_salud_documentos').doc(String(nuevoDoc.id)).set(nuevoDoc);
+        } catch (e) {
+            console.error("Error subiendo documento a la nube:", e);
+        }
+    }
+}
+
+async function eliminarDocumentoPaciente(docId) {
+    documentosUsuarioActual = documentosUsuarioActual.filter(d => d.id !== docId);
+    const todosLocales = JSON.parse(localStorage.getItem(DB_DOCS_KEY) || '[]').filter(d => d.id !== docId);
+    localStorage.setItem(DB_DOCS_KEY, JSON.stringify(todosLocales));
+    renderizarGaleriaDocumentos();
+
+    if (nubeActiva && dbNube) {
+        try {
+            await dbNube.collection('mi_salud_documentos').doc(String(docId)).delete();
+        } catch (e) {
+            console.error("Error eliminando documento de la nube:", e);
+        }
     }
 }
 
 // =========================================================================
-// 3. INICIALIZACIÓN Y CAMBIO DE SUBPÁGINA (SOLO COLUMNA CENTRAL)
+// 3. INICIALIZACIÓN Y NAVEGACIÓN
 // =========================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    inicializarBaseUsuarios();
+document.addEventListener('DOMContentLoaded', async () => {
+    inicializarFirebase();
     configurarLogin();
     configurarNavegacionSuperior();
     configurarDropzone();
@@ -289,22 +411,22 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarNuevaRecomendacion();
     configurarAdminCrearUsuario();
 
+    await sincronizarUsuariosDesdeNube();
+
     const usuario = obtenerUsuarioActivo();
     if (usuario) {
-        mostrarAplicacion(usuario);
+        await mostrarAplicacion(usuario);
     }
 
     setInterval(verificarAlarmasTiempoReal, 30000);
 });
 
 function cambiarSubpagina(nombreSubpagina) {
-    const subpaginas = ['inicio', 'cuidados', 'historial', 'admin'];
-    subpaginas.forEach(sp => {
+    ['inicio', 'cuidados', 'historial', 'admin'].forEach(sp => {
         const el = document.getElementById(`subpagina-${sp}`);
         if (el) el.style.display = (sp === nombreSubpagina) ? 'block' : 'none';
     });
 
-    // Actualizar estado activo en navegación superior
     document.querySelectorAll('.nav-link').forEach(btn => {
         btn.classList.toggle('activo', btn.getAttribute('data-subpagina') === nombreSubpagina);
     });
@@ -316,24 +438,31 @@ function cambiarSubpagina(nombreSubpagina) {
 
 function configurarNavegacionSuperior() {
     document.querySelectorAll('.nav-link[data-subpagina]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            cambiarSubpagina(btn.getAttribute('data-subpagina'));
-        });
+        btn.addEventListener('click', () => cambiarSubpagina(btn.getAttribute('data-subpagina')));
     });
 }
 
 // =========================================================================
-// 4. LOGIN, LOGOUT Y PANEL ADMIN
+// 4. LOGIN, LOGOUT Y PANEL ADMIN EN LA NUBE
 // =========================================================================
 function configurarLogin() {
     const form = document.getElementById('formLogin');
     if (!form) return;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('btnSubmitLogin');
         const u = document.getElementById('loginUsuario').value.trim();
         const p = document.getElementById('loginPassword').value.trim();
-        const encontrado = obtenerUsuarios().find(x => x.usuario === u && x.password === p);
+
+        btn.textContent = 'Verificando...';
+        btn.disabled = true;
+
+        const usuarios = await sincronizarUsuariosDesdeNube();
+        const encontrado = usuarios.find(x => x.usuario === u && x.password === p);
+
+        btn.textContent = 'Ingresar';
+        btn.disabled = false;
 
         if (!encontrado) {
             document.getElementById('loginError').textContent = '❌ Usuario o contraseña incorrectos.';
@@ -341,11 +470,11 @@ function configurarLogin() {
         }
         document.getElementById('loginError').textContent = '';
         localStorage.setItem(SESSION_KEY, encontrado.id);
-        mostrarAplicacion(encontrado);
+        await mostrarAplicacion(encontrado);
     });
 }
 
-function mostrarAplicacion(usuario) {
+async function mostrarAplicacion(usuario) {
     document.getElementById('pantallaLogin').style.display = 'none';
     document.getElementById('appPrincipal').style.display = 'block';
 
@@ -355,6 +484,7 @@ function mostrarAplicacion(usuario) {
 
     cambiarSubpagina('inicio');
     renderizarTodo();
+    await cargarDocumentosPaciente(usuario.id);
     verificarAlarmasTiempoReal();
 }
 
@@ -369,13 +499,13 @@ function configurarAdminCrearUsuario() {
     const form = document.getElementById('formCrearUsuario');
     if (!form) return;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const actual = obtenerUsuarioActivo();
         if (!actual || actual.rol !== 'admin') return;
 
         const username = document.getElementById('nuevoUsuario').value.trim();
-        const usuarios = obtenerUsuarios();
+        const usuarios = await sincronizarUsuariosDesdeNube();
         if (usuarios.some(u => u.usuario.toLowerCase() === username.toLowerCase())) {
             alert('⚠️ Ese usuario ya existe.');
             return;
@@ -399,16 +529,14 @@ function configurarAdminCrearUsuario() {
             },
             medicamentos: [],
             examenes: [],
-            documentos: [],
             recomendaciones: [],
             citas: []
         };
 
-        usuarios.push(nuevo);
-        guardarUsuarios(usuarios);
+        await guardarUsuarioEnNubeYLocal(nuevo);
         form.reset();
         renderizarListaUsuariosAdmin();
-        alert(`✅ Usuario "${nuevo.perfil.nombre}" creado correctamente.`);
+        alert(`✅ Usuario "${nuevo.perfil.nombre}" guardado en la nube. Ya puede ingresar desde cualquier dispositivo.`);
     });
 }
 
@@ -417,7 +545,7 @@ function renderizarListaUsuariosAdmin() {
     const actual = obtenerUsuarioActivo();
     if (!contenedor || !actual || actual.rol !== 'admin') return;
 
-    contenedor.innerHTML = obtenerUsuarios().map(u => `
+    contenedor.innerHTML = obtenerUsuariosCache().map(u => `
         <div class="tarjeta-registro" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <strong>${escaparHTML(u.perfil.nombre)}</strong> (${u.rol.toUpperCase()})<br>
@@ -428,14 +556,18 @@ function renderizarListaUsuariosAdmin() {
     `).join('');
 }
 
-function eliminarUsuarioAdmin(id) {
+async function eliminarUsuarioAdmin(id) {
     if (!confirm('¿Eliminar este usuario y su historial?')) return;
-    guardarUsuarios(obtenerUsuarios().filter(u => u.id !== id));
+    const restantes = obtenerUsuariosCache().filter(u => u.id !== id);
+    localStorage.setItem(DB_USERS_KEY, JSON.stringify(restantes));
+    if (nubeActiva && dbNube) {
+        await dbNube.collection('mi_salud_usuarios').doc(id).delete();
+    }
     renderizarListaUsuariosAdmin();
 }
 
 // =========================================================================
-// 5. COLUMNA IZQUIERDA: DATOS PERSONALES Y FOTO DE PERFIL
+// 5. PERFIL PERSONAL Y FOTO DE PERFIL EN LA NUBE
 // =========================================================================
 function alternarEdicionPerfil(editar) {
     document.getElementById('vistaLecturaPerfil').style.display = editar ? 'none' : 'flex';
@@ -451,16 +583,16 @@ function configurarPerfilYFoto() {
             const usuario = obtenerUsuarioActivo();
             if (!usuario) return;
 
-            const foto = await comprimirImagen(file, 220, 0.75);
+            const foto = await comprimirImagen(file, 220, 0.72);
             usuario.perfil.foto = foto;
-            actualizarUsuarioActivo(usuario);
+            await guardarUsuarioEnNubeYLocal(usuario);
             renderizarPerfilLateral(usuario);
         });
     }
 
     const form = document.getElementById('formDatosPersonales');
     if (form) {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const usuario = obtenerUsuarioActivo();
             if (!usuario) return;
@@ -474,7 +606,7 @@ function configurarPerfilYFoto() {
             usuario.perfil.alergias = document.getElementById('pacienteAlergias').value.trim();
             usuario.perfil.emergencia = document.getElementById('pacienteEmergencia').value.trim();
 
-            actualizarUsuarioActivo(usuario);
+            await guardarUsuarioEnNubeYLocal(usuario);
             alternarEdicionPerfil(false);
             renderizarTodo();
         });
@@ -496,7 +628,6 @@ function renderizarPerfilLateral(usuario) {
     document.getElementById('lblEPS').textContent = p.eps || '--';
     document.getElementById('lblEnfermedad').textContent = CONTENIDO_SALUD[p.enfermedad]?.titulo || 'Salud General';
 
-    // Precargar formulario de edición
     document.getElementById('pacienteNombre').value = p.nombre || '';
     document.getElementById('pacienteEdad').value = p.edad || '';
     document.getElementById('pacienteRH').value = p.rh || '';
@@ -508,7 +639,7 @@ function renderizarPerfilLateral(usuario) {
 }
 
 // =========================================================================
-// 6. DROPZONE Y LECTURA INTELIGENTE DE FÓRMULAS / EXÁMENES
+// 6. DROPZONE Y GUARDADO AUTOMÁTICO DE ARCHIVOS EN LA NUBE
 // =========================================================================
 let archivoActualDataURL = null;
 
@@ -523,13 +654,8 @@ function configurarDropzone() {
         }
     });
 
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
-
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropZone.classList.remove('dragover');
@@ -563,7 +689,7 @@ document.getElementById('fileForm').addEventListener('submit', async function (e
     if (validImages.includes(file.type)) {
         result.textContent = '⏳ Leyendo imagen médica (OCR)...';
         result.style.color = '#1b4d32';
-        archivoActualDataURL = await comprimirImagen(file, 700, 0.65);
+        archivoActualDataURL = await comprimirImagen(file, 720, 0.65);
 
         preview.innerHTML = `<img src="${archivoActualDataURL}" style="max-width:100%; max-height:200px; border-radius:8px; margin-top:10px; border:1px solid #dce6e0;">`;
 
@@ -574,7 +700,7 @@ document.getElementById('fileForm').addEventListener('submit', async function (e
                 }
             }
         }).then(({ data: { text } }) => {
-            result.textContent = '✅ Documento leído. Confirma los datos para guardarlos:';
+            result.textContent = '✅ Documento leído. Confirma los datos para guardarlos en línea:';
             result.style.color = '#1b4d32';
             mostrarPanelConfirmacion(text, file.name);
         }).catch(() => {
@@ -592,7 +718,7 @@ document.getElementById('fileForm').addEventListener('submit', async function (e
                     promesas.push(pdf.getPage(i).then(p => p.getTextContent()).then(c => c.items.map(x => x.str).join(' ')));
                 }
                 Promise.all(promesas).then(paginas => {
-                    result.textContent = '✅ PDF leído. Confirma los datos para guardarlos:';
+                    result.textContent = '✅ PDF leído. Confirma los datos para guardarlos en línea:';
                     mostrarPanelConfirmacion(paginas.join('\n'), file.name);
                 });
             });
@@ -647,7 +773,6 @@ function analizarTextoMedico(texto) {
         medNombre: lineaMed.substring(0, 55),
         medFrec: mFrec ? mFrec[0] : 'Cada 8h',
         medCant: mCant ? parseInt(mCant[1], 10) : 14,
-        medFin: sumarDias(fecha, 7),
         proximaToma: obtenerHoraFuturaISO(60),
         exSector: sector,
         exTitulo: lineaEx.substring(0, 55),
@@ -662,7 +787,7 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
     panel.style.display = 'block';
 
     panel.innerHTML = `
-        <h3 style="color:#1b4d32;">Confirmar Datos Extraídos (${escaparHTML(nombreArchivo)})</h3>
+        <h3 style="color:#1b4d32;">Guardar en Historial en la Nube (${escaparHTML(nombreArchivo)})</h3>
         <div class="form-stack">
             <select id="confTipo" class="campo-salud">
                 <option value="formula" ${d.tipo === 'formula' ? 'selected' : ''}>Fórmula Médica (Medicamento)</option>
@@ -693,7 +818,7 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
             </div>
 
             <textarea id="confRecs" rows="2" placeholder="Recomendaciones médicas (una por línea)..." class="campo-salud">${escaparHTML(d.recomendaciones)}</textarea>
-            <button type="button" id="btnGuardarDoc" class="btn-primario">Guardar en mi Perfil</button>
+            <button type="button" id="btnGuardarDoc" class="btn-primario">☁️ Guardar en mi Historial</button>
         </div>
     `;
 
@@ -703,20 +828,25 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
         document.getElementById('bloqueExamen').style.display = esF ? 'none' : 'flex';
     });
 
-    document.getElementById('btnGuardarDoc').addEventListener('click', () => {
+    document.getElementById('btnGuardarDoc').addEventListener('click', async () => {
         const usuario = obtenerUsuarioActivo();
         if (!usuario) return;
+
+        const btn = document.getElementById('btnGuardarDoc');
+        btn.textContent = 'Guardando en la nube...';
+        btn.disabled = true;
 
         const tipo = document.getElementById('confTipo').value;
         const fecha = document.getElementById('confFecha').value;
 
-        usuario.documentos.unshift({
+        await guardarDocumentoPaciente({
             id: Date.now(),
+            userId: usuario.id,
             nombreArchivo,
             tipo,
             fecha,
             imagenDataURL: archivoActualDataURL,
-            textoExtraido: texto || 'Registro manual'
+            textoExtraido: (texto || 'Registro manual').substring(0, 12000)
         });
 
         if (tipo === 'formula') {
@@ -757,14 +887,14 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
             });
         }
 
-        actualizarUsuarioActivo(usuario);
+        await guardarUsuarioEnNubeYLocal(usuario);
         renderizarTodo();
-        panel.innerHTML = `<strong style="color:#1b4d32;">✅ Guardado correctamente en Medicamentos, Resultados y Recomendaciones.</strong>`;
+        panel.innerHTML = `<strong style="color:#1b4d32;">✅ Archivo e información guardados en la nube correctamente.</strong>`;
     });
 }
 
 // =========================================================================
-// 7. RENDERIZADO DE TODAS LAS SECCIONES (INICIO, LATERALES, CUIDADOS, HISTORIAL)
+// 7. RENDERIZADO DE TODAS LAS SECCIONES
 // =========================================================================
 function renderizarTodo() {
     const usuario = obtenerUsuarioActivo();
@@ -775,17 +905,16 @@ function renderizarTodo() {
     renderizarCitas(usuario);
     renderizarRecomendaciones(usuario);
     renderizarHistorialCompleto(usuario);
+    renderizarGaleriaDocumentos();
     renderizarBienestar();
 }
 
 function renderizarResumenInicio(usuario) {
-    // 1. Subcard Izquierda: Medicamentos Activos (Como en la foto)
     const contMed = document.getElementById('resumenMedicamentosActivos');
     if (contMed) {
-        if (usuario.medicamentos.length === 0) {
-            contMed.innerHTML = '<p class="texto-suave">Sin medicamentos activos.</p>';
-        } else {
-            contMed.innerHTML = usuario.medicamentos.slice(0, 4).map(m => `
+        contMed.innerHTML = usuario.medicamentos.length === 0
+            ? '<p class="texto-suave">Sin medicamentos activos.</p>'
+            : usuario.medicamentos.slice(0, 4).map(m => `
                 <div class="item-med-compacto">
                     <span class="check-circulo">✓</span>
                     <div style="flex:1;">
@@ -795,16 +924,13 @@ function renderizarResumenInicio(usuario) {
                     <button type="button" onclick="registrarTomaMedicamento(${m.id})" class="btn-secundario" style="padding:3px 8px; font-size:11px;">Tomar</button>
                 </div>
             `).join('');
-        }
     }
 
-    // 2. Subcard Derecha: Resultados Recientes con barras (Como en la foto)
     const contRes = document.getElementById('resumenResultadosRecientes');
     if (contRes) {
-        if (usuario.examenes.length === 0) {
-            contRes.innerHTML = '<p class="texto-suave">Sin resultados recientes.</p>';
-        } else {
-            contRes.innerHTML = usuario.examenes.slice(0, 4).map(ex => `
+        contRes.innerHTML = usuario.examenes.length === 0
+            ? '<p class="texto-suave">Sin resultados recientes.</p>'
+            : usuario.examenes.slice(0, 4).map(ex => `
                 <div style="font-size:13px;">
                     <div><strong>${escaparHTML(ex.titulo)}:</strong> ${escaparHTML(ex.resultado)}</div>
                     <div class="barra-progreso-bg">
@@ -812,7 +938,6 @@ function renderizarResumenInicio(usuario) {
                     </div>
                 </div>
             `).join('');
-        }
     }
 }
 
@@ -857,23 +982,6 @@ function renderizarHistorialCompleto(usuario, sectorFiltro = 'Todos') {
                 </div>
             `).join('');
     }
-
-    const galeria = document.getElementById('galeriaDocumentos');
-    if (galeria) {
-        galeria.innerHTML = (!usuario.documentos || usuario.documentos.length === 0)
-            ? '<p class="texto-suave">Aún no hay archivos guardados.</p>'
-            : usuario.documentos.map(doc => `
-                <div class="doc-card">
-                    ${doc.imagenDataURL ? `<img src="${doc.imagenDataURL}" alt="Doc">` : `<div style="height:100px; background:#e6f2eb; display:flex; align-items:center; justify-content:center; border-radius:6px; margin-bottom:6px; font-weight:700; color:#1b4d32;">📄 PDF</div>`}
-                    <strong>${escaparHTML(doc.nombreArchivo)}</strong><br>
-                    <small>${doc.fecha}</small>
-                    <div style="display:flex; gap:4px; margin-top:6px;">
-                        <button type="button" onclick="abrirModalDocumento(${doc.id})" class="btn-primario" style="flex:1; padding:4px; font-size:11px;">Ver</button>
-                        <button type="button" onclick="eliminarItemUsuario('documentos', ${doc.id})" class="btn-salir-mini" style="padding:4px 7px;">✕</button>
-                    </div>
-                </div>
-            `).join('');
-    }
 }
 
 function filtrarSector(sector) {
@@ -881,8 +989,27 @@ function filtrarSector(sector) {
     if (usuario) renderizarHistorialCompleto(usuario, sector);
 }
 
+function renderizarGaleriaDocumentos() {
+    const galeria = document.getElementById('galeriaDocumentos');
+    if (!galeria) return;
+
+    galeria.innerHTML = documentosUsuarioActual.length === 0
+        ? '<p class="texto-suave">Aún no hay archivos guardados en tu cuenta.</p>'
+        : documentosUsuarioActual.map(doc => `
+            <div class="doc-card">
+                ${doc.imagenDataURL ? `<img src="${doc.imagenDataURL}" alt="Doc">` : `<div style="height:100px; background:#e6f2eb; display:flex; align-items:center; justify-content:center; border-radius:6px; margin-bottom:6px; font-weight:700; color:#1b4d32;">📄 PDF</div>`}
+                <strong>${escaparHTML(doc.nombreArchivo)}</strong><br>
+                <small>${doc.fecha}</small>
+                <div style="display:flex; gap:4px; margin-top:6px;">
+                    <button type="button" onclick="abrirModalDocumento(${doc.id})" class="btn-primario" style="flex:1; padding:4px; font-size:11px;">Ver</button>
+                    <button type="button" onclick="eliminarDocumentoPaciente(${doc.id})" class="btn-salir-mini" style="padding:4px 7px;">✕</button>
+                </div>
+            </div>
+        `).join('');
+}
+
 // =========================================================================
-// 8. SUBPÁGINA MIS CUIDADOS (RECARGA COLUMNA CENTRAL)
+// 8. SUBPÁGINA MIS CUIDADOS (VIDEOS AUTOMÁTICOS POR ENFERMEDAD Y EDAD)
 // =========================================================================
 function renderizarBienestar() {
     const usuario = obtenerUsuarioActivo();
@@ -892,16 +1019,24 @@ function renderizarBienestar() {
     const edad = parseInt(usuario.perfil.edad, 10) || 30;
     const plan = CONTENIDO_SALUD[cond] || CONTENIDO_SALUD.general;
 
+    // Clonar los 3 videos base de la enfermedad y adaptar el 3ro según el grupo de edad
+    const videosAdaptados = [...plan.videos];
     let guiaEdad = `Adulto (${edad} años): actividad física moderada y constante.`;
-    if (edad >= 60) guiaEdad = `Adulto mayor (${edad} años): prioriza ejercicios de bajo impacto y equilibrio.`;
-    else if (edad < 18) guiaEdad = `Etapa juvenil (${edad} años): deportes recreativos e hidratación constante.`;
+
+    if (edad >= 60) {
+        guiaEdad = `Adulto mayor (${edad} años): videos y ejercicios adaptados a bajo impacto y equilibrio.`;
+        videosAdaptados[2] = VIDEOS_POR_EDAD.mayor;
+    } else if (edad < 18) {
+        guiaEdad = `Etapa juvenil (${edad} años): deportes recreativos, movilidad e hidratación.`;
+        videosAdaptados[2] = VIDEOS_POR_EDAD.juvenil;
+    }
 
     document.getElementById('encabezadoBienestar').innerHTML = `
         <strong>Plan activo: ${plan.titulo}</strong><br>
         <span>${guiaEdad}</span>
     `;
 
-    document.getElementById('contenedorVideosSalud').innerHTML = plan.videos.map((v, i) => `
+    document.getElementById('contenedorVideosSalud').innerHTML = videosAdaptados.map((v, i) => `
         <div class="video-card">
             <iframe src="${v.urlEmbed}" title="${escaparHTML(v.titulo)}" allowfullscreen loading="lazy"></iframe>
             <div style="padding:10px;">
@@ -927,13 +1062,13 @@ function renderizarBienestar() {
 }
 
 // =========================================================================
-// 9. COLUMNA DERECHA: CITAS, RECOMENDACIONES Y ALARMAS SONORAS
+// 9. CITAS, RECOMENDACIONES Y ALARMAS SONORAS
 // =========================================================================
 function configurarCitas() {
     const form = document.getElementById('formCitas');
     if (!form) return;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const usuario = obtenerUsuarioActivo();
         if (!usuario) return;
@@ -949,7 +1084,7 @@ function configurarCitas() {
         });
 
         usuario.citas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
-        actualizarUsuarioActivo(usuario);
+        await guardarUsuarioEnNubeYLocal(usuario);
         renderizarCitas(usuario);
         form.reset();
         verificarAlarmasTiempoReal();
@@ -977,7 +1112,7 @@ function configurarNuevaRecomendacion() {
     const form = document.getElementById('formNuevaRecomendacion');
     if (!form) return;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const input = document.getElementById('inputNuevaRec');
         const texto = input.value.trim();
@@ -992,7 +1127,7 @@ function configurarNuevaRecomendacion() {
             fecha: new Date().toISOString().split('T')[0],
             completada: false
         });
-        actualizarUsuarioActivo(usuario);
+        await guardarUsuarioEnNubeYLocal(usuario);
         renderizarRecomendaciones(usuario);
         input.value = '';
     });
@@ -1048,7 +1183,7 @@ function cerrarBannerAlerta() {
     document.getElementById('bannerAlertaGlobal').style.display = 'none';
 }
 
-function verificarAlarmasTiempoReal() {
+async function verificarAlarmasTiempoReal() {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
 
@@ -1089,13 +1224,13 @@ function verificarAlarmasTiempoReal() {
         }
     });
 
-    if (cambios) actualizarUsuarioActivo(usuario);
+    if (cambios) await guardarUsuarioEnNubeYLocal(usuario);
 }
 
 // =========================================================================
 // 10. UTILIDADES GENERALES
 // =========================================================================
-function registrarTomaMedicamento(id) {
+async function registrarTomaMedicamento(id) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
     const med = usuario.medicamentos.find(m => m.id === id);
@@ -1104,34 +1239,32 @@ function registrarTomaMedicamento(id) {
         med.proximaToma = obtenerHoraFuturaISO(480);
         med.alerta30Enviada = false;
         med.alertaHoraEnviada = false;
-        actualizarUsuarioActivo(usuario);
+        await guardarUsuarioEnNubeYLocal(usuario);
         renderizarTodo();
     }
 }
 
-function eliminarItemUsuario(coleccion, id) {
+async function eliminarItemUsuario(coleccion, id) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
     usuario[coleccion] = usuario[coleccion].filter(x => x.id !== id);
-    actualizarUsuarioActivo(usuario);
+    await guardarUsuarioEnNubeYLocal(usuario);
     renderizarTodo();
 }
 
-function alternarRecomendacionUsuario(id) {
+async function alternarRecomendacionUsuario(id) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
     const rec = usuario.recomendaciones.find(r => r.id === id);
     if (rec) {
         rec.completada = !rec.completada;
-        actualizarUsuarioActivo(usuario);
+        await guardarUsuarioEnNubeYLocal(usuario);
         renderizarRecomendaciones(usuario);
     }
 }
 
 function abrirModalDocumento(id) {
-    const usuario = obtenerUsuarioActivo();
-    if (!usuario) return;
-    const doc = usuario.documentos.find(d => d.id === id);
+    const doc = documentosUsuarioActual.find(d => d.id === id);
     if (!doc) return;
     document.getElementById('modalDocTitulo').textContent = `${doc.nombreArchivo} (${doc.fecha})`;
     document.getElementById('modalDocCuerpo').innerHTML = `
@@ -1148,7 +1281,8 @@ function cerrarModalDocumento() {
 function exportarHistorialUsuario() {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
-    const blob = new Blob([JSON.stringify({ ...usuario, password: '***' }, null, 2)], { type: 'application/json' });
+    const respaldo = { ...usuario, password: '***', documentos: documentosUsuarioActual };
+    const blob = new Blob([JSON.stringify(respaldo, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -1,4 +1,4 @@
-<!-- Mi Salud - Diseño 3 Columnas Persistentes + Subpágina Mis Cuidados -->
+<!-- Mi Salud - Fase 4: Sincronización en la Nube Gratuita (Firebase Firestore) -->
 <!-- Autor: Alejandro Quintero -->
 <!DOCTYPE html>
 <html lang="es">
@@ -15,7 +15,11 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 
-    <title>Mi Salud - Gestor Clínico Personal</title>
+    <!-- Firebase SDK (Plan Spark Gratuito para Base de Datos e Historial en la Nube) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <title>Mi Salud - Gestor Clínico en la Nube</title>
 </head>
 <body>
 
@@ -29,6 +33,7 @@
                 <span class="logo-texto">Mi Salud</span>
             </div>
             <p class="texto-suave">Gestión Clínica Personal y Familiar</p>
+            <div id="loginEstadoNube" style="text-align:center; font-size:11px; margin-bottom:8px; color:#1b4d32; font-weight:600;"></div>
             <hr class="divisor">
             <form id="formLogin" class="form-stack">
                 <label class="label-campo">Usuario</label>
@@ -37,7 +42,7 @@
                 <label class="label-campo">Contraseña</label>
                 <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña" class="campo-salud" required>
                 
-                <button type="submit" class="btn-primario" style="margin-top:8px;">Ingresar</button>
+                <button type="submit" id="btnSubmitLogin" class="btn-primario" style="margin-top:8px;">Ingresar</button>
             </form>
             <p id="loginError" class="texto-error"></p>
             <div class="caja-demo">
@@ -58,11 +63,16 @@
             <button type="button" onclick="cerrarBannerAlerta()" class="btn-cerrar-alerta">Entendido</button>
         </div>
 
-        <!-- ENCABEZADO SUPERIOR FIJO (Igual a la imagen de referencia) -->
+        <!-- ENCABEZADO SUPERIOR FIJO -->
         <header class="header">
-            <div class="brand-logo" onclick="cambiarSubpagina('inicio')" style="cursor:pointer;">
-                <span class="logo-cruz">✚</span>
-                <span class="logo-texto">Mi Salud</span>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="brand-logo" onclick="cambiarSubpagina('inicio')" style="cursor:pointer;">
+                    <span class="logo-cruz">✚</span>
+                    <span class="logo-texto">Mi Salud</span>
+                </div>
+                <span id="estadoNubeBadge" style="font-size:11px; padding:4px 10px; border-radius:999px; background:#e6f2eb; color:#1b4d32; font-weight:600;">
+                    ☁️ Sincronizando...
+                </span>
             </div>
 
             <nav class="nav-superior">
@@ -90,7 +100,6 @@
             <!-- ============================================================= -->
             <aside class="container__menu">
                 
-                <!-- Tarjeta Datos Personales (Compacta como en la foto) -->
                 <div class="card">
                     <div class="card-header-flex">
                         <h2>Datos Personales</h2>
@@ -100,7 +109,6 @@
                         <input type="file" id="inputFotoPerfil" accept="image/*" style="display:none;">
                     </div>
 
-                    <!-- Vista de lectura limpia -->
                     <div id="vistaLecturaPerfil" class="datos-lista">
                         <div class="dato-item"><span>Nombre:</span> <strong id="lblNombre">--</strong></div>
                         <div class="dato-item"><span>Edad:</span> <strong id="lblEdad">--</strong></div>
@@ -109,7 +117,6 @@
                         <div class="dato-item"><span>Enfoque:</span> <strong id="lblEnfermedad">--</strong></div>
                     </div>
 
-                    <!-- Formulario de edición (Oculto por defecto para mantener limpio el lateral) -->
                     <form id="formDatosPersonales" class="form-stack" style="display:none; margin-top:10px;">
                         <input type="text" id="pacienteNombre" placeholder="Nombre completo" class="campo-salud" required>
                         <div style="display:flex; gap:6px;">
@@ -140,7 +147,6 @@
                         </div>
                     </form>
 
-                    <!-- Botones de navegación rápida (Estilo píldora verde oscuro de la foto) -->
                     <div class="botones-laterales">
                         <button type="button" class="btn-pildora" onclick="cambiarSubpagina('inicio')">Inicio / Cargar</button>
                         <button type="button" class="btn-pildora" onclick="cambiarSubpagina('cuidados')">Mis Cuidados</button>
@@ -150,7 +156,7 @@
                     </div>
                 </div>
 
-                <!-- Tarjeta Contactos EPS (Fija en columna izquierda) -->
+                <!-- Contactos EPS -->
                 <div class="card">
                     <h2 style="margin-bottom:10px;">Contactos EPS</h2>
                     <div class="eps-item">
@@ -175,12 +181,8 @@
             <!-- ============================================================= -->
             <section class="container__contenido">
 
-                <!-- --------------------------------------------------------- -->
-                <!-- SUBPÁGINA 1: INICIO (Cargar Archivo + Análisis 2 columnas) -->
-                <!-- --------------------------------------------------------- -->
+                <!-- SUBPÁGINA 1: INICIO -->
                 <div id="subpagina-inicio">
-                    
-                    <!-- Tarjeta Superior: Cargar Fórmula o Examen -->
                     <div class="card">
                         <h2>Cargar Fórmula o Examen</h2>
                         <form id="fileForm">
@@ -201,30 +203,22 @@
                         <div id="panelConfirmacionDatos" class="panel-confirmacion" style="display: none;"></div>
                     </div>
 
-                    <!-- Tarjeta Inferior: Análisis de Datos Médicos (2 sub-columnas) -->
                     <div class="card">
                         <h2>Análisis de Datos Médicos</h2>
                         <div class="grid-dos-columnas">
-                            
-                            <!-- Sub-columna Izquierda: Medicamentos Activos -->
                             <div class="subcard">
                                 <h3>Medicamentos Activos</h3>
                                 <div id="resumenMedicamentosActivos" class="lista-compacta"></div>
                             </div>
-
-                            <!-- Sub-columna Derecha: Resultados Recientes -->
                             <div class="subcard">
                                 <h3>Resultados Recientes</h3>
                                 <div id="resumenResultadosRecientes" class="lista-compacta"></div>
                             </div>
-
                         </div>
                     </div>
                 </div>
 
-                <!-- --------------------------------------------------------- -->
-                <!-- SUBPÁGINA 2: MIS CUIDADOS (Videos, Dieta y Deportes)      -->
-                <!-- --------------------------------------------------------- -->
+                <!-- SUBPÁGINA 2: MIS CUIDADOS -->
                 <div id="subpagina-cuidados" style="display: none;">
                     <div class="card">
                         <div class="card-header-flex">
@@ -233,7 +227,7 @@
                         </div>
                         <div id="encabezadoBienestar" class="banner-perfil-cuidado"></div>
 
-                        <h3 class="titulo-seccion">🎥 3 Videos Recomendados para tu Salud</h3>
+                        <h3 class="titulo-seccion">🎥 3 Videos Recomendados (Según Edad y Condición)</h3>
                         <div id="contenedorVideosSalud" class="grid-videos"></div>
 
                         <hr class="divisor">
@@ -248,13 +242,11 @@
                     </div>
                 </div>
 
-                <!-- --------------------------------------------------------- -->
-                <!-- SUBPÁGINA 3: HISTORIAL COMPLETO Y DOCUMENTOS GUARDADOS    -->
-                <!-- --------------------------------------------------------- -->
+                <!-- SUBPÁGINA 3: HISTORIAL COMPLETO Y ARCHIVOS EN LA NUBE -->
                 <div id="subpagina-historial" style="display: none;">
                     <div class="card">
                         <div class="card-header-flex">
-                            <h2>Historial Clínico y Documentos</h2>
+                            <h2>Historial Clínico en la Nube</h2>
                             <div style="display:flex; gap:8px;">
                                 <button type="button" onclick="exportarHistorialUsuario()" class="btn-secundario">📥 Exportar JSON</button>
                                 <button type="button" onclick="cambiarSubpagina('inicio')" class="btn-secundario">← Inicio</button>
@@ -272,14 +264,12 @@
 
                         <hr class="divisor">
 
-                        <h3 class="titulo-seccion">📂 Imágenes y Documentos Archivados</h3>
+                        <h3 class="titulo-seccion">📂 Imágenes y Documentos Guardados en Línea</h3>
                         <div id="galeriaDocumentos" class="grid-documentos"></div>
                     </div>
                 </div>
 
-                <!-- --------------------------------------------------------- -->
-                <!-- SUBPÁGINA 4: ADMINISTRADOR (REGISTRO DE USUARIOS)         -->
-                <!-- --------------------------------------------------------- -->
+                <!-- SUBPÁGINA 4: ADMINISTRADOR -->
                 <div id="subpagina-admin" style="display: none;">
                     <div class="card">
                         <div class="card-header-flex">
@@ -318,7 +308,7 @@
                                     <option value="estres">Estrés / Ansiedad</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn-primario">Crear Usuario</button>
+                            <button type="submit" class="btn-primario">Crear Usuario en la Nube</button>
                         </form>
 
                         <h3 class="titulo-seccion" style="margin-top:16px;">👥 Usuarios Registrados</h3>
@@ -332,8 +322,6 @@
             <!-- COLUMNA 3 (DERECHA - FIJA EN TODAS LAS SUBPÁGINAS)            -->
             <!-- ============================================================= -->
             <aside class="container__aside">
-                
-                <!-- Tarjeta Superior: Citas Médicas (Igual a la foto) -->
                 <div class="card">
                     <h2>Citas y Recomendaciones</h2>
                     <h3 style="font-size:14px; margin:8px 0; color:#333;">Citas Médicas</h3>
@@ -351,7 +339,6 @@
                     <div id="listaCitas" class="lista-citas-compacta"></div>
                 </div>
 
-                <!-- Tarjeta Inferior: Recomendaciones de Cuidado (Igual a la foto) -->
                 <div class="card">
                     <h2>Recomendaciones de Cuidado</h2>
                     <div id="listaRecomendaciones" class="lista-recomendaciones"></div>
@@ -361,14 +348,12 @@
                         <button type="submit" class="btn-primario" style="padding:0 12px;">+</button>
                     </form>
                 </div>
-
             </aside>
 
         </main>
 
-        <!-- PIE DE PÁGINA -->
         <footer class="footer">
-            <span>Mi Salud v3.1 — Plataforma Clínica Personal | Desarrollo Software: Alejandro Quintero (2026)</span>
+            <span>Mi Salud v4.0 — Sincronización en la Nube | Desarrollo Software: Alejandro Quintero (2026)</span>
         </footer>
     </div>
 
