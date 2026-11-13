@@ -1,0 +1,215 @@
+/* ========================================================================= */
+/* COMPLEMENTO FASE 3: LOGIN, EPS, ALERTAS, GALERÍA, VIDEOS Y DEPORTES       */
+/* ========================================================================= */
+
+.login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #e8f5ee 0%, #ffffff 100%);
+}
+
+.login-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(26, 86, 50, 0.15);
+    border-top: 6px solid rgb(26, 86, 50);
+}
+
+.banner-alerta {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #d9534f;
+    color: #ffffff;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.btn-cerrar-alerta {
+    background: #ffffff;
+    color: #d9534f;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.avatar-header {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgb(26, 86, 50);
+}
+
+.avatar-perfil {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgb(26, 86, 50);
+    display: block;
+    margin: 0 auto 8px auto;
+}
+
+.btn-subir-foto {
+    display: inline-block;
+    background-color: #e1f2e8;
+    color: rgb(26, 86, 50);
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgb(26, 86, 50);
+}
+
+.btn-secundario {
+    background-color: #e1f2e8;
+    color: rgb(26, 86, 50);
+    border: 1px solid rgb(26, 86, 50);
+    padding: 8px 14px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-salir {
+    background-color: #c0392b;
+    color: #ffffff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* Tarjetas EPS en barra izquierda */
+.card-eps {
+    background-color: #f4fbf7;
+    border-left: 4px solid rgb(26, 86, 50);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: left;
+    font-size: 13px;
+}
+
+.card-eps p {
+    margin: 4px 0;
+}
+
+.card-eps a {
+    color: rgb(26, 86, 50);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-eps {
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px;
+    background-color: rgb(26, 86, 50);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Galería de documentos guardados */
+.grid-documentos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.doc-card {
+    border: 1px solid #cce3d6;
+    border-radius: 10px;
+    padding: 10px;
+    background: #ffffff;
+    text-align: left;
+    font-size: 12px;
+}
+
+.doc-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+/* Videos y Deportes */
+.grid-videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.video-card {
+    background: #ffffff;
+    border: 1px solid #cce3d6;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: left;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.video-card iframe {
+    width: 100%;
+    height: 150px;
+    border: none;
+}
+
+.grid-deportes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.deporte-card {
+    background: #f4fbf7;
+    border: 1px solid rgb(26, 86, 50);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: left;
+}
+
+/* Modal visor de documentos */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-contenido {
+    background: #ffffff;
+    width: 100%;
+    max-width: 650px;
+    border-radius: 12px;
+    padding: 20px;
+}

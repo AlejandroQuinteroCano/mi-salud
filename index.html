@@ -1,0 +1,329 @@
+<!-- Interfaz Mi Salud - Fase 3: Plataforma Multiusuario, Alertas, EPS y Bienestar -->
+<!-- Base adaptada de Validador Marketing LAB - Autor: Alejandro Quintero -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Motores de lectura OCR (Imágenes) y PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+    <title>Mi Salud - Gestor Clínico Multiusuario</title>
+</head>
+<body>
+
+    <!-- ===================================================================== -->
+    <!-- PANTALLA DE INICIO DE SESIÓN (Visible cuando no hay sesión activa)    -->
+    <!-- ===================================================================== -->
+    <div id="pantallaLogin" class="login-wrapper">
+        <div class="login-card">
+            <h1>Mi Salud</h1>
+            <p class="texto-suave">Plataforma de Gestión Clínica Personal y Familiar</p>
+            <hr>
+            <form id="formLogin" class="form-lateral">
+                <label style="text-align:left; font-size:13px; font-weight:bold;">Usuario</label>
+                <input type="text" id="loginUsuario" placeholder="Ingresa tu usuario" class="campo-salud" required>
+                
+                <label style="text-align:left; font-size:13px; font-weight:bold;">Contraseña</label>
+                <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña" class="campo-salud" required>
+                
+                <button type="submit" class="container__boton_info" style="height:42px; margin-top:12px;">
+                    Ingresar al Sistema
+                </button>
+            </form>
+            <p id="loginError" style="color:#c0392b; font-size:13px; font-weight:bold; margin-top:8px;"></p>
+            <div style="margin-top:15px; font-size:12px; color:#555; background:#f4fbf7; padding:8px; border-radius:8px;">
+                <strong>Acceso Admin:</strong> <code>admin</code> / <code>admin123</code><br>
+                <strong>Acceso Paciente:</strong> <code>paciente1</code> / <code>1234</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- APLICACIÓN PRINCIPAL (Visible al iniciar sesión)                      -->
+    <!-- ===================================================================== -->
+    <div id="appPrincipal" style="display: none;">
+
+        <!-- BANNER DE ALERTAS SONORAS Y VISUALES EN TIEMPO REAL -->
+        <div id="bannerAlertaGlobal" class="banner-alerta" style="display: none;">
+            <span id="textoAlertaGlobal">🔔 Recordatorio médico</span>
+            <button type="button" onclick="cerrarBannerAlerta()" class="btn-cerrar-alerta">Entendido</button>
+        </div>
+
+        <!-- ENCABEZADO (Conserva .header) -->
+        <header class="header">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img id="headerAvatar" src="./img/ia.jpg" alt="Foto de perfil" class="avatar-header">
+                <div style="text-align:left;">
+                    <h1 style="padding-bottom:0; margin:0; font-size:26px;">Mi Salud</h1>
+                    <small id="resumenPacienteHeader" style="color:#1a5632; font-weight:bold;">Cargando perfil...</small>
+                </div>
+            </div>
+
+            <div style="margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <button type="button" onclick="probarSonidoAlerta()" class="btn-secundario" title="Activar y probar sonido de alarmas">
+                    🔔 Probar Alarma
+                </button>
+                <button type="button" onclick="exportarHistorialUsuario()" class="btn-secundario">
+                    📥 Exportar Historial
+                </button>
+                <button type="button" onclick="cerrarSesion()" class="btn-salir">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </header>
+        <hr>
+
+        <!-- CONTENEDOR PRINCIPAL DE 3 COLUMNAS (Conserva .container) -->
+        <div class="container">
+
+            <!-- ============================================================= -->
+            <!-- COLUMNA IZQUIERDA (.container__menu)                          -->
+            <!-- ============================================================= -->
+            <div class="container__menu">
+                <h2>Módulos</h2>
+                <hr>
+                <button type="button" class="container__boton_info" data-vista="carga">📄 Subir Fórmula / Examen</button>
+                <button type="button" class="container__boton_info" data-vista="medicamentos">💊 Medicamentos y Alarmas</button>
+                <button type="button" class="container__boton_info" data-vista="examenes">🔬 Exámenes e Historial</button>
+                <button type="button" class="container__boton_info" data-vista="bienestar">🏃 Videos, Dieta y Deporte</button>
+                
+                <!-- Botón exclusivo para el Administrador -->
+                <button type="button" id="btnNavAdmin" class="container__boton_info" data-vista="admin" style="display:none; background:#0e3b5c;">
+                    ⚙️ Registrar Usuarios (Admin)
+                </button>
+                <hr>
+
+                <!-- DATOS PERSONALES Y FOTO DE PERFIL -->
+                <h2>Mi Perfil y Foto</h2>
+                <div style="margin-bottom:10px;">
+                    <img id="perfilAvatarPreview" src="./img/ia.jpg" alt="Foto del paciente" class="avatar-perfil">
+                    <label for="inputFotoPerfil" class="btn-subir-foto">📷 Cambiar Foto</label>
+                    <input type="file" id="inputFotoPerfil" accept="image/*" style="display:none;">
+                </div>
+
+                <form id="formDatosPersonales" class="form-lateral">
+                    <input type="text" id="pacienteNombre" placeholder="Nombre completo" class="campo-salud" required>
+                    <input type="text" id="pacienteDocumento" placeholder="Documento / Cédula" class="campo-salud">
+                    <div style="display:flex; gap:6px;">
+                        <input type="number" id="pacienteEdad" placeholder="Edad" min="1" max="120" class="campo-salud">
+                        <input type="text" id="pacienteRH" placeholder="RH (ej. O+)" class="campo-salud">
+                    </div>
+                    <select id="pacienteEPS" class="campo-salud">
+                        <option value="Salud Total">EPS: Salud Total</option>
+                        <option value="Savia Salud">EPS: Savia Salud</option>
+                        <option value="Sura">EPS: Sura</option>
+                        <option value="Nueva EPS">EPS: Nueva EPS</option>
+                        <option value="Sanitas">EPS: Sanitas</option>
+                        <option value="Otra">EPS: Otra</option>
+                    </select>
+                    <select id="pacienteEnfermedad" class="campo-salud" title="Condición principal para personalizar videos, dieta y deporte">
+                        <option value="general">Condición: Prevención / Salud General</option>
+                        <option value="hipertension">Condición: Hipertensión Arterial</option>
+                        <option value="diabetes">Condición: Diabetes / Glucosa</option>
+                        <option value="osteomuscular">Condición: Dolor Lumbar / Articular</option>
+                        <option value="respiratorio">Condición: Asma / Respiratorio</option>
+                        <option value="estres">Condición: Estrés / Ansiedad</option>
+                    </select>
+                    <input type="text" id="pacienteAlergias" placeholder="Alergias conocidas" class="campo-salud">
+                    <input type="tel" id="pacienteEmergencia" placeholder="Teléfono de emergencia" class="campo-salud">
+                    <button type="submit" class="container__boton_info">Guardar Perfil</button>
+                </form>
+                <hr>
+
+                <!-- CONTACTOS Y PORTALES DE EPS (SALUD TOTAL Y SAVIA SALUD) -->
+                <h2>Canales EPS</h2>
+                <div class="card-eps">
+                    <strong>🏥 Salud Total EPS</strong>
+                    <p>Línea Nacional: <a href="tel:018000114524">01 8000 114 524</a></p>
+                    <p>Medellín / Ant: <a href="tel:6043221515">(604) 322 15 15</a></p>
+                    <a href="https://saludtotal.com.co/" target="_blank" rel="noopener">
+                        <button type="button" class="btn-eps">Portal Salud Total</button>
+                    </a>
+                </div>
+
+                <div class="card-eps">
+                    <strong>🏥 Savia Salud EPS</strong>
+                    <p>Línea Gratuita: <a href="tel:018000423683">01 8000 423 683</a></p>
+                    <p>Medellín / Ant: <a href="tel:6044481747">(604) 448 17 47</a></p>
+                    <a href="https://www.saviasaludeps.com/" target="_blank" rel="noopener">
+                        <button type="button" class="btn-eps">Portal Savia Salud</button>
+                    </a>
+                </div>
+
+                <div class="card-eps" style="border-left-color:#c0392b;">
+                    <strong>🚑 Emergencias Médicas</strong>
+                    <p>Línea Única: <a href="tel:123"><strong>123</strong></a></p>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- COLUMNA CENTRAL (.container__contenido)                       -->
+            <!-- ============================================================= -->
+            <div class="container__contenido">
+                
+                <!-- VISTA 1: CARGA INTELIGENTE DE FÓRMULAS Y EXÁMENES -->
+                <section id="vista-carga">
+                    <h1>Gestor Inteligente de Documentos Médicos</h1>
+                    <form id="fileForm">
+                        <small id="fileHelp" class="form-text text-muted">
+                            Sube la foto o PDF de tu fórmula o examen. Se guardará en tu historial personal y alimentará tus alarmas y sectores.
+                        </small>
+                        <p>
+                            <input type="file" id="fileInput" accept="image/*,application/pdf,.txt" class="container__input_arc" aria-describedby="fileHelp">
+                        </p>
+                        <button type="submit" aria-label="Analizar documento" class="container__boton">Analizar</button>
+                        <button type="button" onclick="nuevo_archivo();" class="container__boton" id="reiniciar" disabled>Nuevo</button>
+                    </form>
+
+                    <p id="result"></p>
+                    <p id="requirements"></p>
+                    <div id="preview" style="margin-top: 20px;"></div>
+                    
+                    <!-- Tarjeta de confirmación estructurada -->
+                    <div id="panelConfirmacionDatos" class="tarjeta-medica" style="display: none;"></div>
+                </section>
+
+                <!-- VISTA 2: MEDICAMENTOS Y PROGRAMACIÓN DE ALARMAS -->
+                <section id="vista-medicamentos" style="display: none;">
+                    <h1>Tratamientos y Alarmas de Medicamentos</h1>
+                    <p class="texto-suave">El sistema emitirá una alerta sonora 30 minutos antes y a la hora exacta de cada toma.</p>
+                    <div id="listaMedicamentos" class="lista-registros"></div>
+                </section>
+
+                <!-- VISTA 3: EXÁMENES POR SECTOR E HISTORIAL DE DOCUMENTOS -->
+                <section id="vista-examenes" style="display: none;">
+                    <h1>Exámenes por Sector e Historial Guardado</h1>
+                    <div id="filtrosSector" class="filtros-sector"></div>
+                    <div id="listaExamenes" class="lista-registros"></div>
+
+                    <hr style="margin:25px 0;">
+                    <h2>📂 Galería de Documentos e Imágenes Guardadas</h2>
+                    <div id="galeriaDocumentos" class="grid-documentos"></div>
+                </section>
+
+                <!-- VISTA 4: VIDEOS DE SALUD, ALIMENTACIÓN Y DEPORTES -->
+                <section id="vista-bienestar" style="display: none;">
+                    <h1>Plan de Bienestar, Videos y Deporte</h1>
+                    <div id="encabezadoBienestar" class="tarjeta-medica" style="margin-bottom:15px;"></div>
+
+                    <!-- 3 Videos de Salud -->
+                    <h2 style="text-align:left; color:#1a5632;">🎥 3 Videos Recomendados para Ti</h2>
+                    <div id="contenedorVideosSalud" class="grid-videos"></div>
+
+                    <hr style="margin:20px 0;">
+
+                    <!-- Alimentación y Cuidados -->
+                    <h2 style="text-align:left; color:#1a5632;">🥗 Alimentación y Cuidados Diarios</h2>
+                    <div id="contenedorAlimentacion" class="tarjeta-medica"></div>
+
+                    <hr style="margin:20px 0;">
+
+                    <!-- Deportes recomendados -->
+                    <h2 style="text-align:left; color:#1a5632;">🏅 Deportes y Actividad Física Recomendada</h2>
+                    <div id="contenedorDeportes" class="grid-deportes"></div>
+                </section>
+
+                <!-- VISTA 5: PANEL DE ADMINISTRADOR (REGISTRO DE USUARIOS) -->
+                <section id="vista-admin" style="display: none;">
+                    <h1>Panel de Administración — Registro de Usuarios</h1>
+                    <div class="tarjeta-medica">
+                        <h3 style="margin-top:0; color:#1a5632;">➕ Crear Nuevo Usuario / Paciente</h3>
+                        <form id="formCrearUsuario" style="display:grid; gap:10px;">
+                            <input type="text" id="nuevoNombre" placeholder="Nombre completo del paciente" class="campo-salud" required>
+                            <div style="display:flex; gap:8px;">
+                                <input type="text" id="nuevoUsuario" placeholder="Nombre de usuario (login)" class="campo-salud" required>
+                                <input type="text" id="nuevoPassword" placeholder="Contraseña asignada" class="campo-salud" required>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <input type="number" id="nuevaEdad" placeholder="Edad" min="1" max="120" class="campo-salud" required>
+                                <input type="text" id="nuevoRH" placeholder="RH (ej. A+)" class="campo-salud">
+                                <select id="nuevoRol" class="campo-salud">
+                                    <option value="paciente">Rol: Paciente</option>
+                                    <option value="admin">Rol: Administrador</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <select id="nuevaEPS" class="campo-salud">
+                                    <option value="Salud Total">EPS: Salud Total</option>
+                                    <option value="Savia Salud">EPS: Savia Salud</option>
+                                    <option value="Sura">EPS: Sura</option>
+                                    <option value="Nueva EPS">EPS: Nueva EPS</option>
+                                    <option value="Sanitas">EPS: Sanitas</option>
+                                </select>
+                                <select id="nuevaEnfermedad" class="campo-salud">
+                                    <option value="general">Salud General / Prevención</option>
+                                    <option value="hipertension">Hipertensión Arterial</option>
+                                    <option value="diabetes">Diabetes / Glucosa</option>
+                                    <option value="osteomuscular">Dolor Lumbar / Articular</option>
+                                    <option value="respiratorio">Asma / Respiratorio</option>
+                                    <option value="estres">Estrés / Ansiedad</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="container__boton_info" style="height:40px;">Registrar Usuario</button>
+                        </form>
+                    </div>
+
+                    <h3 style="text-align:left; margin-top:20px;">👥 Usuarios Registrados en el Sistema</h3>
+                    <div id="listaUsuariosAdmin"></div>
+                </section>
+
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- COLUMNA DERECHA (.container__aside)                           -->
+            <!-- ============================================================= -->
+            <div class="container__aside">
+                <h2>Gestionar Citas</h2>
+                <small class="texto-suave">Aviso automático 1 día antes y 30 min antes.</small>
+                <hr>
+                <form id="formCitas" class="form-lateral">
+                    <input type="text" id="citaEspecialidad" placeholder="Especialidad (ej. Medicina General)" class="campo-salud" required>
+                    <input type="date" id="citaFecha" class="campo-salud" required>
+                    <input type="time" id="citaHora" class="campo-salud" required>
+                    <input type="text" id="citaLugar" placeholder="Sede EPS / Enlace teleconsulta" class="campo-salud">
+                    <button type="submit" class="container__boton_info">Agendar Cita</button>
+                </form>
+                <div id="listaCitas" class="lista-lateral"></div>
+
+                <hr>
+                <h2>Recomendaciones Médicas</h2>
+                <div id="listaRecomendaciones" class="lista-lateral"></div>
+
+                <hr>
+                <img src="./img/ia.jpg" alt="Asistente inteligente de salud" class="img"/>
+            </div>
+
+        </div>
+
+        <!-- PIE DE PÁGINA (Conserva .footer) -->
+        <footer class="footer">
+            <h2>Versión 3.0 — Mi Salud</h2>
+            <p>PLATAFORMA CLÍNICA MULTIUSUARIO</p>
+            <p>DESARROLLO SOFTWARE — ALEJANDRO QUINTERO</p>
+            <p>2026</p>
+        </footer>
+    </div>
+
+    <!-- MODAL PARA VER DOCUMENTOS/IMÁGENES GUARDADAS -->
+    <div id="modalDocumento" class="modal-overlay" style="display:none;">
+        <div class="modal-contenido">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="modalDocTitulo" style="margin:0; color:#1a5632;">Documento Guardado</h3>
+                <button type="button" onclick="cerrarModalDocumento()" class="btn-salir">✕ Cerrar</button>
+            </div>
+            <hr>
+            <div id="modalDocCuerpo" style="max-height:70vh; overflow-y:auto; text-align:left;"></div>
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
