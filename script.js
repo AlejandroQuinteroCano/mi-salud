@@ -1,9 +1,8 @@
-// Mi Salud - Fase 4: Persistencia en la Nube Gratuita (Firebase Firestore) + Videos por Edad/Condición
+// Mi Salud - Fase 4 (Corregida): Sincronización en la Nube con Control de Tiempo de Espera
 // Autor: Alejandro Quintero
 
 // =========================================================================
-// 0. CONFIGURACIÓN DE FIREBASE (PLAN SPARK GRATUITO - SIN TARJETA)
-// Reemplaza los valores de abajo con los de tu proyecto en console.firebase.google.com
+// 0. CONFIGURACIÓN DE FIREBASE (PROYECTO: marketlab-media)
 // =========================================================================
 const FIREBASE_CONFIG = {
     apiKey: "AIzaSyAGkoMFG9Yz2Pxyuk5Ax6HZ3SlYKio7cfc",
@@ -17,9 +16,15 @@ const FIREBASE_CONFIG = {
 let dbNube = null;
 let nubeActiva = false;
 
+function conTimeout(promesa, ms = 4000) {
+    return Promise.race([
+        promesa,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado con Firestore')), ms))
+    ]);
+}
+
 function inicializarFirebase() {
-    const configurado = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.includes("PEGA_AQUI");
-    if (configurado && typeof firebase !== 'undefined') {
+    if (FIREBASE_CONFIG.apiKey && typeof firebase !== 'undefined') {
         try {
             if (!firebase.apps.length) {
                 firebase.initializeApp(FIREBASE_CONFIG);
@@ -31,13 +36,13 @@ function inicializarFirebase() {
             nubeActiva = false;
         }
     }
-    actualizarIndicadorNube();
+    actualizarIndicadorNube(nubeActiva);
 }
 
-function actualizarIndicadorNube() {
-    const texto = nubeActiva
+function actualizarIndicadorNube(conectado, detalleError = '') {
+    const texto = conectado
         ? "☁️ Conectado en la Nube (Historial sincronizado)"
-        : "💾 Modo Local (Pega tu Firebase Config en script.js para nube)";
+        : `⚠️ Nube pendiente (${detalleError || 'Revisa Firestore/Reglas'}) — Modo Local activo`;
     const badgeHeader = document.getElementById('estadoNubeBadge');
     const badgeLogin = document.getElementById('loginEstadoNube');
     if (badgeHeader) badgeHeader.textContent = texto;
@@ -176,7 +181,7 @@ const CONTENIDO_SALUD = {
 };
 
 // =========================================================================
-// 2. CAPA DE DATOS HÍBRIDA (FIRESTORE EN LA NUBE + CACHÉ LOCAL)
+// 2. CAPA DE DATOS HÍBRIDA (FIRESTORE CON TIMEOUT + RESPALDO LOCAL)
 // =========================================================================
 function obtenerUsuariosPorDefecto() {
     const hoy = new Date().toISOString().split('T')[0];
@@ -293,21 +298,23 @@ async function sincronizarUsuariosDesdeNube() {
     if (!nubeActiva || !dbNube) return locales;
 
     try {
-        const snapshot = await dbNube.collection('mi_salud_usuarios').get();
+        const snapshot = await conTimeout(dbNube.collection('mi_salud_usuarios').get(), 4000);
         if (snapshot.empty) {
-            // Subir usuarios iniciales a la nube la primera vez
             for (const u of locales) {
-                await dbNube.collection('mi_salud_usuarios').doc(u.id).set(u);
+                await conTimeout(dbNube.collection('mi_salud_usuarios').doc(u.id).set(u), 3000);
             }
+            actualizarIndicadorNube(true);
             return locales;
         } else {
             const desdeNube = [];
             snapshot.forEach(doc => desdeNube.push(doc.data()));
             localStorage.setItem(DB_USERS_KEY, JSON.stringify(desdeNube));
+            actualizarIndicadorNube(true);
             return desdeNube;
         }
     } catch (e) {
-        console.warn("No se pudo sincronizar con Firestore, usando caché local:", e);
+        console.warn("Firestore no respondió a tiempo o falta habilitar reglas:", e.message);
+        actualizarIndicadorNube(false, 'Activa Firestore / Reglas');
         return locales;
     }
 }
@@ -336,14 +343,14 @@ async function guardarUsuarioEnNubeYLocal(usuarioModificado) {
 
     if (nubeActiva && dbNube) {
         try {
-            await dbNube.collection('mi_salud_usuarios').doc(usuarioModificado.id).set(usuarioModificado);
+            await conTimeout(dbNube.collection('mi_salud_usuarios').doc(usuarioModificado.id).set(usuarioModificado), 4000);
+            actualizarIndicadorNube(true);
         } catch (e) {
-            console.error("Error guardando usuario en la nube:", e);
+            console.warn("Guardado en caché local; pendiente sincronizar nube:", e.message);
         }
     }
 }
 
-// Gestión de Documentos e Imágenes por Paciente en la Nube (Colección separada para soportar miles de archivos gratis)
 let documentosUsuarioActual = [];
 
 async function cargarDocumentosPaciente(userId) {
@@ -352,7 +359,7 @@ async function cargarDocumentosPaciente(userId) {
 
     if (nubeActiva && dbNube) {
         try {
-            const snap = await dbNube.collection('mi_salud_documentos').where('userId', '==', userId).get();
+            const snap = await conTimeout(dbNube.collection('mi_salud_documentos').where('userId', '==', userId).get(), 4000);
             docsUsuario = [];
             snap.forEach(doc => docsUsuario.push(doc.data()));
             docsUsuario.sort((a, b) => b.id - a.id);
@@ -360,7 +367,7 @@ async function cargarDocumentosPaciente(userId) {
             const otros = todosLocales.filter(d => d.userId !== userId);
             localStorage.setItem(DB_DOCS_KEY, JSON.stringify([...otros, ...docsUsuario]));
         } catch (e) {
-            console.warn("Error leyendo documentos de la nube:", e);
+            console.warn("Usando documentos locales:", e.message);
         }
     }
     documentosUsuarioActual = docsUsuario;
@@ -376,9 +383,9 @@ async function guardarDocumentoPaciente(nuevoDoc) {
 
     if (nubeActiva && dbNube) {
         try {
-            await dbNube.collection('mi_salud_documentos').doc(String(nuevoDoc.id)).set(nuevoDoc);
+            await conTimeout(dbNube.collection('mi_salud_documentos').doc(String(nuevoDoc.id)).set(nuevoDoc), 4000);
         } catch (e) {
-            console.error("Error subiendo documento a la nube:", e);
+            console.warn("Documento guardado localmente:", e.message);
         }
     }
 }
@@ -391,10 +398,8 @@ async function eliminarDocumentoPaciente(docId) {
 
     if (nubeActiva && dbNube) {
         try {
-            await dbNube.collection('mi_salud_documentos').doc(String(docId)).delete();
-        } catch (e) {
-            console.error("Error eliminando documento de la nube:", e);
-        }
+            await conTimeout(dbNube.collection('mi_salud_documentos').doc(String(docId)).delete(), 4000);
+        } catch (e) {}
     }
 }
 
@@ -411,11 +416,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     configurarNuevaRecomendacion();
     configurarAdminCrearUsuario();
 
-    await sincronizarUsuariosDesdeNube();
-
     const usuario = obtenerUsuarioActivo();
     if (usuario) {
         await mostrarAplicacion(usuario);
+    } else {
+        sincronizarUsuariosDesdeNube();
     }
 
     setInterval(verificarAlarmasTiempoReal, 30000);
@@ -443,7 +448,7 @@ function configurarNavegacionSuperior() {
 }
 
 // =========================================================================
-// 4. LOGIN, LOGOUT Y PANEL ADMIN EN LA NUBE
+// 4. LOGIN, LOGOUT Y PANEL ADMIN (CON PROTECCIÓN ANTI-BLOQUEO)
 // =========================================================================
 function configurarLogin() {
     const form = document.getElementById('formLogin');
@@ -452,25 +457,32 @@ function configurarLogin() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnSubmitLogin');
+        const errorEl = document.getElementById('loginError');
         const u = document.getElementById('loginUsuario').value.trim();
         const p = document.getElementById('loginPassword').value.trim();
 
         btn.textContent = 'Verificando...';
         btn.disabled = true;
+        errorEl.textContent = '';
 
-        const usuarios = await sincronizarUsuariosDesdeNube();
-        const encontrado = usuarios.find(x => x.usuario === u && x.password === p);
+        try {
+            const usuarios = await sincronizarUsuariosDesdeNube();
+            const encontrado = usuarios.find(x => x.usuario === u && x.password === p);
 
-        btn.textContent = 'Ingresar';
-        btn.disabled = false;
+            if (!encontrado) {
+                errorEl.textContent = '❌ Usuario o contraseña incorrectos.';
+                return;
+            }
 
-        if (!encontrado) {
-            document.getElementById('loginError').textContent = '❌ Usuario o contraseña incorrectos.';
-            return;
+            localStorage.setItem(SESSION_KEY, encontrado.id);
+            await mostrarAplicacion(encontrado);
+        } catch (err) {
+            console.error('Error durante inicio de sesión:', err);
+            errorEl.textContent = '⚠️ Error al iniciar sesión. Intenta nuevamente.';
+        } finally {
+            btn.textContent = 'Ingresar';
+            btn.disabled = false;
         }
-        document.getElementById('loginError').textContent = '';
-        localStorage.setItem(SESSION_KEY, encontrado.id);
-        await mostrarAplicacion(encontrado);
     });
 }
 
@@ -536,7 +548,7 @@ function configurarAdminCrearUsuario() {
         await guardarUsuarioEnNubeYLocal(nuevo);
         form.reset();
         renderizarListaUsuariosAdmin();
-        alert(`✅ Usuario "${nuevo.perfil.nombre}" guardado en la nube. Ya puede ingresar desde cualquier dispositivo.`);
+        alert(`✅ Usuario "${nuevo.perfil.nombre}" creado correctamente.`);
     });
 }
 
@@ -561,13 +573,13 @@ async function eliminarUsuarioAdmin(id) {
     const restantes = obtenerUsuariosCache().filter(u => u.id !== id);
     localStorage.setItem(DB_USERS_KEY, JSON.stringify(restantes));
     if (nubeActiva && dbNube) {
-        await dbNube.collection('mi_salud_usuarios').doc(id).delete();
+        try { await conTimeout(dbNube.collection('mi_salud_usuarios').doc(id).delete(), 4000); } catch (e) {}
     }
     renderizarListaUsuariosAdmin();
 }
 
 // =========================================================================
-// 5. PERFIL PERSONAL Y FOTO DE PERFIL EN LA NUBE
+// 5. PERFIL PERSONAL Y FOTO DE PERFIL
 // =========================================================================
 function alternarEdicionPerfil(editar) {
     document.getElementById('vistaLecturaPerfil').style.display = editar ? 'none' : 'flex';
@@ -639,7 +651,7 @@ function renderizarPerfilLateral(usuario) {
 }
 
 // =========================================================================
-// 6. DROPZONE Y GUARDADO AUTOMÁTICO DE ARCHIVOS EN LA NUBE
+// 6. DROPZONE Y LECTURA DE ARCHIVOS
 // =========================================================================
 let archivoActualDataURL = null;
 
@@ -700,7 +712,7 @@ document.getElementById('fileForm').addEventListener('submit', async function (e
                 }
             }
         }).then(({ data: { text } }) => {
-            result.textContent = '✅ Documento leído. Confirma los datos para guardarlos en línea:';
+            result.textContent = '✅ Documento leído. Confirma los datos para guardarlos:';
             result.style.color = '#1b4d32';
             mostrarPanelConfirmacion(text, file.name);
         }).catch(() => {
@@ -718,7 +730,7 @@ document.getElementById('fileForm').addEventListener('submit', async function (e
                     promesas.push(pdf.getPage(i).then(p => p.getTextContent()).then(c => c.items.map(x => x.str).join(' ')));
                 }
                 Promise.all(promesas).then(paginas => {
-                    result.textContent = '✅ PDF leído. Confirma los datos para guardarlos en línea:';
+                    result.textContent = '✅ PDF leído. Confirma los datos para guardarlos:';
                     mostrarPanelConfirmacion(paginas.join('\n'), file.name);
                 });
             });
@@ -787,7 +799,7 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
     panel.style.display = 'block';
 
     panel.innerHTML = `
-        <h3 style="color:#1b4d32;">Guardar en Historial en la Nube (${escaparHTML(nombreArchivo)})</h3>
+        <h3 style="color:#1b4d32;">Guardar en Historial (${escaparHTML(nombreArchivo)})</h3>
         <div class="form-stack">
             <select id="confTipo" class="campo-salud">
                 <option value="formula" ${d.tipo === 'formula' ? 'selected' : ''}>Fórmula Médica (Medicamento)</option>
@@ -818,7 +830,7 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
             </div>
 
             <textarea id="confRecs" rows="2" placeholder="Recomendaciones médicas (una por línea)..." class="campo-salud">${escaparHTML(d.recomendaciones)}</textarea>
-            <button type="button" id="btnGuardarDoc" class="btn-primario">☁️ Guardar en mi Historial</button>
+            <button type="button" id="btnGuardarDoc" class="btn-primario">Guardar en mi Historial</button>
         </div>
     `;
 
@@ -833,7 +845,7 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
         if (!usuario) return;
 
         const btn = document.getElementById('btnGuardarDoc');
-        btn.textContent = 'Guardando en la nube...';
+        btn.textContent = 'Guardando...';
         btn.disabled = true;
 
         const tipo = document.getElementById('confTipo').value;
@@ -889,7 +901,7 @@ function mostrarPanelConfirmacion(texto, nombreArchivo) {
 
         await guardarUsuarioEnNubeYLocal(usuario);
         renderizarTodo();
-        panel.innerHTML = `<strong style="color:#1b4d32;">✅ Archivo e información guardados en la nube correctamente.</strong>`;
+        panel.innerHTML = `<strong style="color:#1b4d32;">✅ Archivo e información guardados correctamente.</strong>`;
     });
 }
 
@@ -1019,7 +1031,6 @@ function renderizarBienestar() {
     const edad = parseInt(usuario.perfil.edad, 10) || 30;
     const plan = CONTENIDO_SALUD[cond] || CONTENIDO_SALUD.general;
 
-    // Clonar los 3 videos base de la enfermedad y adaptar el 3ro según el grupo de edad
     const videosAdaptados = [...plan.videos];
     let guiaEdad = `Adulto (${edad} años): actividad física moderada y constante.`;
 
