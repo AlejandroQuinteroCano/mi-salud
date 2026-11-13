@@ -1,125 +1,125 @@
-// Documentación JavaScript para Mi Salud - Fase 3 (Multiusuario, Alarmas, EPS y Bienestar)
-// Base adaptada de Validador Marketing LAB - Autor: Alejandro Quintero
+// Mi Salud - Lógica de 3 Columnas Persistentes + Subpágina Mis Cuidados
+// Autor: Alejandro Quintero
 
 const DB_USERS_KEY = 'mi_salud_usuarios_v3';
 const SESSION_KEY = 'mi_salud_sesion_activa_v3';
 
 // =========================================================================
-// 1. BASE DE CONOCIMIENTO DE SALUD (VIDEOS, ALIMENTACIÓN Y DEPORTES)
+// 1. BASE DE CONOCIMIENTO: MIS CUIDADOS (VIDEOS, ALIMENTACIÓN Y DEPORTES)
 // =========================================================================
 const CONTENIDO_SALUD = {
     general: {
-        titulo: 'Prevención y Bienestar Integral',
+        titulo: 'Prevención y Salud General',
         videos: [
             { titulo: 'Rutina de movilidad articular diaria (10 min)', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=rutina+movilidad+articular+10+minutos+salud' },
-            { titulo: 'Hábitos clave para fortalecer tu sistema inmune', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=habitos+saludables+sistema+inmunologico+medicina' },
+            { titulo: 'Hábitos para fortalecer el sistema inmune', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=habitos+saludables+sistema+inmunologico+medicina' },
             { titulo: 'Higiene del sueño y descanso reparador', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=higiene+del+sueno+consejos+medicos' }
         ],
         alimentacion: [
-            'Prioriza platos balanceados: 50% vegetales variados, 25% proteína magra (pescado, pollo, legumbres) y 25% carbohidratos integrales.',
-            'Mantén una hidratación constante de 6 a 8 vasos de agua pura al día.',
-            'Reduce el consumo de ultraprocesados, bebidas azucaradas y exceso de sodio.'
+            'Distribuye tu plato: 50% vegetales variados, 25% proteína magra (pescado, pollo, legumbres) y 25% carbohidratos integrales.',
+            'Toma de 6 a 8 vasos de agua pura durante el día.',
+            'Reduce alimentos ultraprocesados, azúcares añadidos y exceso de sal.'
         ],
         deportes: [
-            { nombre: 'Caminata Rápida', detalle: '30-45 min, 5 veces por semana. Mejora capacidad cardiorrespiratoria sin impacto articular.' },
-            { nombre: 'Natación o Hidroterapia', detalle: '40 min, 2-3 veces por semana. Fortalece toda la musculatura protegiendo las articulaciones.' },
-            { nombre: 'Ciclismo Recreativo', detalle: '30-60 min, 3 veces por semana. Excelente resistencia cardiovascular y control de peso.' }
+            { nombre: 'Caminata Rápida', detalle: '30-45 min, 5 veces por semana. Mejora la salud cardiovascular sin impacto.' },
+            { nombre: 'Natación', detalle: '40 min, 2-3 veces por semana. Fortalece toda la musculatura cuidando articulaciones.' },
+            { nombre: 'Ciclismo Recreativo', detalle: '30-60 min, 3 veces por semana. Excelente resistencia aeróbica.' }
         ]
     },
     hipertension: {
         titulo: 'Control de Hipertensión Arterial',
         videos: [
-            { titulo: 'Cómo medir correctamente la presión arterial en casa', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=como+tomar+la+presion+arterial+correctamente+en+casa' },
+            { titulo: 'Cómo medir la presión arterial en casa', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=como+tomar+la+presion+arterial+correctamente+en+casa' },
             { titulo: 'Dieta DASH para bajar la tensión arterial', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=dieta+dash+hipertension+arterial+explicacion' },
-            { titulo: 'Ejercicios seguros para personas hipertensas', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+para+hipertensos+cardiologia' }
+            { titulo: 'Ejercicios seguros para hipertensos', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+para+hipertensos+cardiologia' }
         ],
         alimentacion: [
-            'Aplica la dieta DASH: disminuye la sal (menos de 5g/día) y evita enlatados, embutidos y salsas comerciales.',
-            'Aumenta alimentos ricos en potasio y magnesio: banano, aguacate, espinaca, lentejas y nueces sin sal.',
-            'Evita el exceso de cafeína y alcohol, ya que elevan la presión sistólica.'
+            'Aplica la dieta DASH: reduce la sal a menos de 5g/día y evita enlatados, embutidos y caldos concentrados.',
+            'Prioriza alimentos ricos en potasio y magnesio: banano, aguacate, espinaca, lentejas y nueces sin sal.',
+            'Modera el consumo de cafeína y evita el alcohol.'
         ],
         deportes: [
-            { nombre: 'Caminata Aeróbica Moderada', detalle: '30 min diarios a ritmo constante. Ayuda a dilatar los vasos sanguíneos y reducir la presión.' },
-            { nombre: 'Ciclismo Estático Suave', detalle: '25-35 min, 4 veces por semana. Evitar picos de esfuerzo máximo o levantar pesas muy pesadas.' },
-            { nombre: 'Yoga y Respiración Guiada', detalle: '20-30 min diarios. Reduce el cortisol y mejora el control nervioso de la frecuencia cardíaca.' }
+            { nombre: 'Caminata Aeróbica Moderada', detalle: '30 min diarios a paso constante para favorecer la vasodilatación.' },
+            { nombre: 'Ciclismo Estático Suave', detalle: '25-35 min, 4 veces por semana sin picos bruscos de esfuerzo.' },
+            { nombre: 'Yoga y Respiración', detalle: '20-30 min diarios para reducir el estrés y estabilizar la frecuencia cardíaca.' }
         ]
     },
     diabetes: {
         titulo: 'Control Glucémico y Diabetes',
         videos: [
-            { titulo: 'Índice glucémico: cómo combinar alimentos sin picos de azúcar', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=indice+glucemico+como+evitar+picos+de+glucosa' },
-            { titulo: 'Cuidado diario de los pies en pacientes con diabetes', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=cuidado+del+pie+diabetico+prevencion' },
-            { titulo: 'Actividad física post-comida para regular la glucosa', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=caminar+despues+de+comer+glucosa+diabetes' }
+            { titulo: 'Índice glucémico: evitar picos de azúcar', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=indice+glucemico+como+evitar+picos+de+glucosa' },
+            { titulo: 'Cuidado diario de los pies en diabetes', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=cuidado+del+pie+diabetico+prevencion' },
+            { titulo: 'Caminar después de comer para regular glucosa', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=caminar+despues+de+comer+glucosa+diabetes' }
         ],
         alimentacion: [
-            'Consume primero la fibra (ensalada/verduras), luego la proteína y al final los carbohidratos complejos (avena, quinoa, legumbres).',
-            'Elimina azúcares refinados, jugos de fruta colados y harinas blancas.',
-            'Respeta horarios regulares de comida para evitar hipoglucemias o hiperglucemias.'
+            'Orden de ingesta: come primero verduras/fibra, luego proteína y al final carbohidratos complejos (avena, legumbres).',
+            'Evita azúcares refinados, jugos de fruta colados y harinas blancas.',
+            'Mantén horarios fijos de comida para estabilizar la glucemia.'
         ],
         deportes: [
-            { nombre: 'Caminata Postprandial (15 min)', detalle: 'Caminar 15 minutos después de cada comida principal reduce notablemente el pico de glucosa.' },
-            { nombre: 'Entrenamiento de Fuerza Ligera', detalle: '2-3 veces por semana con bandas elásticas. El músculo consume glucosa incluso en reposo.' },
-            { nombre: 'Natación / Aquagym', detalle: '30-40 min, 3 veces por semana. Ideal para mejorar sensibilidad a la insulina cuidando los pies.' }
+            { nombre: 'Caminata Postprandial', detalle: '15 minutos después de cada comida principal para reducir picos de glucosa.' },
+            { nombre: 'Fuerza Ligera con Bandas', detalle: '2-3 veces por semana para aumentar la captación muscular de glucosa.' },
+            { nombre: 'Natación / Aquagym', detalle: '30-40 min, 3 veces por semana protegiendo los pies.' }
         ]
     },
     osteomuscular: {
         titulo: 'Salud Osteomuscular y Espalda',
         videos: [
-            { titulo: 'Pausas activas y ergonomía frente al computador', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=pausas+activas+dolor+lumbar+y+cuello+fisioterapia' },
-            { titulo: 'Estiramientos suaves para aliviar el dolor lumbar', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+aliviar+dolor+lumbar+fisioterapia' },
-            { titulo: 'Fortalecimiento del core para proteger la columna', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=fortalecimiento+core+sin+impacto+columna' }
+            { titulo: 'Pausas activas y ergonomía en el escritorio', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=pausas+activas+dolor+lumbar+y+cuello+fisioterapia' },
+            { titulo: 'Estiramientos para aliviar el dolor lumbar', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+aliviar+dolor+lumbar+fisioterapia' },
+            { titulo: 'Fortalecimiento del core sin impacto', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=fortalecimiento+core+sin+impacto+columna' }
         ],
         alimentacion: [
-            'Incluye alimentos antiinflamatorios naturales: pescados azules (salmón, sardina), cúrcuma, jengibre y aceite de oliva.',
-            'Asegura aporte de calcio y vitamina D (lácteos bajos en grasa, brócoli, exposición solar segura 15 min).',
-            'Mantén un peso saludable para disminuir la carga mecánica sobre rodillas y zona lumbar.'
+            'Incluye alimentos antiinflamatorios: salmón, sardina, cúrcuma, jengibre y aceite de oliva extra virgen.',
+            'Asegura aporte de calcio y vitamina D (lácteos descremados, brócoli, sol suave 15 min).',
+            'Mantén un peso saludable para reducir carga sobre columna y rodillas.'
         ],
         deportes: [
-            { nombre: 'Natación (Estilo Espalda/Crol)', detalle: '30-45 min, 3 veces por semana. Elimina la gravedad sobre los discos intervertebrales.' },
-            { nombre: 'Pilates Terapéutico', detalle: '30 min, 3 veces por semana. Fortalece la faja abdominal profunda y mejora la postura.' },
-            { nombre: 'Caminata en Terreno Plano', detalle: '30 min diarios con calzado amortiguado. Evitar trotar en asfalto o levantar cargas bruscas.' }
+            { nombre: 'Natación (Espalda / Crol)', detalle: '30-45 min, 3 veces por semana sin carga gravitacional sobre discos.' },
+            { nombre: 'Pilates Terapéutico', detalle: '30 min, 3 veces por semana para fortalecer la faja abdominal profunda.' },
+            { nombre: 'Caminata en Plano', detalle: '30 min diarios con calzado amortiguado, evitando impactos.' }
         ]
     },
     respiratorio: {
-        titulo: 'Cuidado Respiratorio y Capacidad Pulmonar',
+        titulo: 'Cuidado Respiratorio',
         videos: [
             { titulo: 'Técnica correcta de uso de inhaladores', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=como+usar+inhalador+correctamente+neumologia' },
-            { titulo: 'Ejercicios de fisioterapia respiratoria y diafragma', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+respiracion+diafragmatica+pulmones' },
-            { titulo: 'Prevención de crisis alérgicas y control ambiental', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=prevencion+asma+control+ambiental+hogar' }
+            { titulo: 'Fisioterapia respiratoria y diafragma', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=ejercicios+respiracion+diafragmatica+pulmones' },
+            { titulo: 'Prevención de alergias en el hogar', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=prevencion+asma+control+ambiental+hogar' }
         ],
         alimentacion: [
-            'Aumenta el consumo de antioxidantes (vitamina C y E): cítricos, kiwi, pimentón, frutos rojos y semillas.',
-            'Bebe abundante agua tibia o infusiones suaves para mantener fluidas las secreciones respiratorias.',
-            'Evita alimentos muy fríos o con conservantes (sulfitos) si eres sensible a broncoespasmos.'
+            'Consume antioxidantes (vitamina C y E): cítricos, kiwi, pimentón y frutos rojos.',
+            'Mantén hidratación con agua tibia o infusiones suaves para fluidificar secreciones.',
+            'Evita bebidas heladas o alimentos con sulfitos si desencadenan tos.'
         ],
         deportes: [
-            { nombre: 'Natación en Piscina Climatizada', detalle: '30-40 min, 2-3 veces por semana. El ambiente húmedo favorece las vías respiratorias.' },
-            { nombre: 'Caminata Progresiva', detalle: '30 min diarios realizando calentamiento previo de 5 minutos antes de acelerar el paso.' },
-            { nombre: 'Tai Chi o Yoga Respiratorio', detalle: '30 min, 3 veces por semana. Coordina el movimiento con inhalaciones profundas y controladas.' }
+            { nombre: 'Natación en Piscina Temperada', detalle: '30-40 min, 2-3 veces por semana en ambiente húmedo favorable.' },
+            { nombre: 'Caminata Progresiva', detalle: '30 min diarios con calentamiento suave de 5 minutos al iniciar.' },
+            { nombre: 'Yoga Respiratorio', detalle: '30 min, 3 veces por semana coordinando respiración diafragmática.' }
         ]
     },
     estres: {
-        titulo: 'Salud Mental, Manejo del Estrés y Sueño',
+        titulo: 'Bienestar Mental y Manejo del Estrés',
         videos: [
-            { titulo: 'Respiración 4-7-8 para calmar la ansiedad en 3 minutos', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=respiracion+4+7+8+ansiedad+relajacion' },
+            { titulo: 'Respiración 4-7-8 para calmar la ansiedad', urlEmbed: 'https://www.youtube.com/embed/inpok4MKVLM', urlDirecta: 'https://www.youtube.com/results?search_query=respiracion+4+7+8+ansiedad+relajacion' },
             { titulo: 'Relajación muscular progresiva guiada', urlEmbed: 'https://www.youtube.com/embed/t0kACis_dJE', urlDirecta: 'https://www.youtube.com/results?search_query=relajacion+muscular+progresiva+de+jacobson' },
-            { titulo: 'Desconexión digital y mejora del descanso nocturno', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=como+bajar+el+cortisol+y+dormir+mejor' }
+            { titulo: 'Cómo reducir el cortisol y dormir mejor', urlEmbed: 'https://www.youtube.com/embed/5qap5aO4i9A', urlDirecta: 'https://www.youtube.com/results?search_query=como+bajar+el+cortisol+y+dormir+mejor' }
         ],
         alimentacion: [
-            'Incluye alimentos ricos en triptófano y magnesio: avena, banano, cacao puro, semillas de calabaza y almendras.',
-            'Evita la cafeína, bebidas energizantes y pantallas al menos 6 horas antes de dormir.',
-            'Incorpora infusiones relajantes naturales como manzanilla, toronjil o tila en la noche.'
+            'Incluye alimentos ricos en magnesio y triptófano: avena, banano, cacao puro y almendras.',
+            'Evita cafeína y pantallas al menos 6 horas antes de acostarte.',
+            'Toma infusiones relajantes como manzanilla o toronjil en la noche.'
         ],
         deportes: [
-            { nombre: 'Caminata al Aire Libre (Naturaleza)', detalle: '30-45 min diarios. Reduce significativamente los niveles de cortisol y rumiación mental.' },
-            { nombre: 'Yoga Restaurativo', detalle: '30 min, 3-4 veces por semana. Libera tensión acumulada en cuello, hombros y mandíbula.' },
-            { nombre: 'Baile o Ciclismo Recreativo', detalle: '30 min, 3 veces por semana. Estimula la liberación de endorfinas y serotonina.' }
+            { nombre: 'Caminata al Aire Libre', detalle: '30-45 min diarios en zonas verdes para disminuir el cortisol.' },
+            { nombre: 'Yoga Restaurativo', detalle: '30 min, 3-4 veces por semana para liberar tensión cervical.' },
+            { nombre: 'Baile o Ciclismo', detalle: '30 min, 3 veces por semana para estimular endorfinas.' }
         ]
     }
 };
 
 // =========================================================================
-// 2. INICIALIZACIÓN DE BASE DE DATOS DE USUARIOS (ADMIN + PACIENTE DEMO)
+// 2. BASE DE DATOS DE USUARIOS (ADMIN + PACIENTE DEMO)
 // =========================================================================
 function inicializarBaseUsuarios() {
     let usuarios = JSON.parse(localStorage.getItem(DB_USERS_KEY) || 'null');
@@ -132,9 +132,9 @@ function inicializarBaseUsuarios() {
                 password: 'admin123',
                 rol: 'admin',
                 perfil: {
-                    nombre: 'Alejandro Quintero (Admin)',
+                    nombre: 'Alejandro',
                     documento: '16.076.155',
-                    edad: '34',
+                    edad: '31',
                     rh: 'O+',
                     eps: 'Salud Total',
                     enfermedad: 'general',
@@ -142,13 +142,65 @@ function inicializarBaseUsuarios() {
                     emergencia: '3016629992',
                     foto: './img/ia.jpg'
                 },
-                medicamentos: [],
-                examenes: [],
+                medicamentos: [
+                    {
+                        id: 101,
+                        nombre: 'Suplemento Vitamínico',
+                        frecuencia: '8:00 AM',
+                        cantidad: 30,
+                        fechaInicio: hoy,
+                        fechaFin: sumarDias(hoy, 30),
+                        proximaToma: obtenerHoraFuturaISO(120),
+                        alerta30Enviada: false,
+                        alertaHoraEnviada: false
+                    },
+                    {
+                        id: 102,
+                        nombre: 'Amoxicilina 500mg',
+                        frecuencia: 'Cada 12h',
+                        cantidad: 14,
+                        fechaInicio: hoy,
+                        fechaFin: sumarDias(hoy, 7),
+                        proximaToma: obtenerHoraFuturaISO(25),
+                        alerta30Enviada: false,
+                        alertaHoraEnviada: false
+                    }
+                ],
+                examenes: [
+                    {
+                        id: 201,
+                        sector: 'Laboratorio Clínico',
+                        titulo: 'Glucosa Basal',
+                        fecha: hoy,
+                        resultado: '95 mg/dL (Normal)',
+                        porcentaje: 65
+                    },
+                    {
+                        id: 202,
+                        sector: 'Laboratorio Clínico',
+                        titulo: 'Hemoglobina',
+                        fecha: hoy,
+                        resultado: '15 mg/dL (Adecuada)',
+                        porcentaje: 80
+                    }
+                ],
                 documentos: [],
                 recomendaciones: [
-                    { id: 1, texto: 'Mantener pausas activas cada 2 horas frente al computador', fecha: hoy, completada: false }
+                    { id: 301, texto: 'Tomar medicamentos a tiempo', fecha: hoy, completada: true },
+                    { id: 302, texto: 'Revisar examen de laboratorio', fecha: hoy, completada: true },
+                    { id: 303, texto: 'Próxima cita de control', fecha: hoy, completada: false }
                 ],
-                citas: []
+                citas: [
+                    {
+                        id: 401,
+                        especialidad: 'Cardiólogo',
+                        fecha: sumarDias(hoy, 6),
+                        hora: '10:00',
+                        lugar: 'Salud Total Sede Principal',
+                        alerta1DiaEnviada: false,
+                        alerta30MinEnviada: false
+                    }
+                ]
             },
             {
                 id: 'usr_pac_1',
@@ -168,29 +220,30 @@ function inicializarBaseUsuarios() {
                 },
                 medicamentos: [
                     {
-                        id: 101,
+                        id: 501,
                         nombre: 'Losartán 50 mg',
-                        frecuencia: 'Cada 12 horas',
+                        frecuencia: 'Cada 12h',
                         cantidad: 28,
                         fechaInicio: hoy,
                         fechaFin: sumarDias(hoy, 14),
-                        proximaToma: obtenerHoraFuturaISO(25), // En 25 min para probar alerta de 30 min
+                        proximaToma: obtenerHoraFuturaISO(25),
                         alerta30Enviada: false,
                         alertaHoraEnviada: false
                     }
                 ],
                 examenes: [
                     {
-                        id: 201,
-                        sector: 'Laboratorio Clínico',
-                        titulo: 'Perfil Lipídico y Glucosa Basal',
+                        id: 502,
+                        sector: 'Cardiología',
+                        titulo: 'Control Presión Arterial',
                         fecha: hoy,
-                        resultado: 'Glucosa: 94 mg/dL (Normal) | Colesterol Total: 185 mg/dL'
+                        resultado: '118/76 mmHg (Controlada)',
+                        porcentaje: 75
                     }
                 ],
                 documentos: [],
                 recomendaciones: [
-                    { id: 301, texto: 'Reducir consumo de sal y tomar la presión arterial en ayunas', fecha: hoy, completada: false }
+                    { id: 503, texto: 'Reducir consumo de sal diario', fecha: hoy, completada: false }
                 ],
                 citas: []
             }
@@ -204,15 +257,14 @@ function obtenerUsuarios() {
     return inicializarBaseUsuarios();
 }
 
-function guardarUsuarios(listaUsuarios) {
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(listaUsuarios));
+function guardarUsuarios(lista) {
+    localStorage.setItem(DB_USERS_KEY, JSON.stringify(lista));
 }
 
 function obtenerUsuarioActivo() {
     const idActivo = localStorage.getItem(SESSION_KEY);
     if (!idActivo) return null;
-    const usuarios = obtenerUsuarios();
-    return usuarios.find(u => u.id === idActivo) || null;
+    return obtenerUsuarios().find(u => u.id === idActivo) || null;
 }
 
 function actualizarUsuarioActivo(usuarioModificado) {
@@ -225,14 +277,16 @@ function actualizarUsuarioActivo(usuarioModificado) {
 }
 
 // =========================================================================
-// 3. CONTROL DE LOGIN, LOGOUT Y PANEL ADMINISTRADOR
+// 3. INICIALIZACIÓN Y CAMBIO DE SUBPÁGINA (SOLO COLUMNA CENTRAL)
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     inicializarBaseUsuarios();
     configurarLogin();
-    configurarNavegacion();
+    configurarNavegacionSuperior();
+    configurarDropzone();
     configurarPerfilYFoto();
     configurarCitas();
+    configurarNuevaRecomendacion();
     configurarAdminCrearUsuario();
 
     const usuario = obtenerUsuarioActivo();
@@ -240,29 +294,52 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarAplicacion(usuario);
     }
 
-    // Iniciar monitor de alarmas cada 30 segundos
     setInterval(verificarAlarmasTiempoReal, 30000);
 });
 
+function cambiarSubpagina(nombreSubpagina) {
+    const subpaginas = ['inicio', 'cuidados', 'historial', 'admin'];
+    subpaginas.forEach(sp => {
+        const el = document.getElementById(`subpagina-${sp}`);
+        if (el) el.style.display = (sp === nombreSubpagina) ? 'block' : 'none';
+    });
+
+    // Actualizar estado activo en navegación superior
+    document.querySelectorAll('.nav-link').forEach(btn => {
+        btn.classList.toggle('activo', btn.getAttribute('data-subpagina') === nombreSubpagina);
+    });
+
+    if (nombreSubpagina === 'cuidados') renderizarBienestar();
+    if (nombreSubpagina === 'historial') renderizarTodo();
+    if (nombreSubpagina === 'admin') renderizarListaUsuariosAdmin();
+}
+
+function configurarNavegacionSuperior() {
+    document.querySelectorAll('.nav-link[data-subpagina]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            cambiarSubpagina(btn.getAttribute('data-subpagina'));
+        });
+    });
+}
+
+// =========================================================================
+// 4. LOGIN, LOGOUT Y PANEL ADMIN
+// =========================================================================
 function configurarLogin() {
-    const formLogin = document.getElementById('formLogin');
-    if (!formLogin) return;
+    const form = document.getElementById('formLogin');
+    if (!form) return;
 
-    formLogin.addEventListener('submit', (e) => {
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
-        const userInput = document.getElementById('loginUsuario').value.trim();
-        const passInput = document.getElementById('loginPassword').value.trim();
-        const errorEl = document.getElementById('loginError');
-
-        const usuarios = obtenerUsuarios();
-        const encontrado = usuarios.find(u => u.usuario === userInput && u.password === passInput);
+        const u = document.getElementById('loginUsuario').value.trim();
+        const p = document.getElementById('loginPassword').value.trim();
+        const encontrado = obtenerUsuarios().find(x => x.usuario === u && x.password === p);
 
         if (!encontrado) {
-            errorEl.textContent = '❌ Usuario o contraseña incorrectos.';
+            document.getElementById('loginError').textContent = '❌ Usuario o contraseña incorrectos.';
             return;
         }
-
-        errorEl.textContent = '';
+        document.getElementById('loginError').textContent = '';
         localStorage.setItem(SESSION_KEY, encontrado.id);
         mostrarAplicacion(encontrado);
     });
@@ -272,13 +349,11 @@ function mostrarAplicacion(usuario) {
     document.getElementById('pantallaLogin').style.display = 'none';
     document.getElementById('appPrincipal').style.display = 'block';
 
-    // Mostrar botón Admin solo si su rol es admin
-    const btnAdmin = document.getElementById('btnNavAdmin');
-    if (btnAdmin) {
-        btnAdmin.style.display = (usuario.rol === 'admin') ? 'block' : 'none';
-    }
+    const esAdmin = usuario.rol === 'admin';
+    document.getElementById('btnNavAdminTop').style.display = esAdmin ? 'inline-block' : 'none';
+    document.getElementById('btnNavAdminSide').style.display = esAdmin ? 'block' : 'none';
 
-    cargarDatosEnFormularioPerfil(usuario);
+    cambiarSubpagina('inicio');
     renderizarTodo();
     verificarAlarmasTiempoReal();
 }
@@ -291,23 +366,22 @@ function cerrarSesion() {
 }
 
 function configurarAdminCrearUsuario() {
-    const formAdmin = document.getElementById('formCrearUsuario');
-    if (!formAdmin) return;
+    const form = document.getElementById('formCrearUsuario');
+    if (!form) return;
 
-    formAdmin.addEventListener('submit', (e) => {
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
         const actual = obtenerUsuarioActivo();
         if (!actual || actual.rol !== 'admin') return;
 
         const username = document.getElementById('nuevoUsuario').value.trim();
         const usuarios = obtenerUsuarios();
-
         if (usuarios.some(u => u.usuario.toLowerCase() === username.toLowerCase())) {
-            alert('⚠️ Ese nombre de usuario ya existe. Elige otro.');
+            alert('⚠️ Ese usuario ya existe.');
             return;
         }
 
-        const nuevoUser = {
+        const nuevo = {
             id: 'usr_' + Date.now(),
             usuario: username,
             password: document.getElementById('nuevoPassword').value.trim(),
@@ -330,11 +404,11 @@ function configurarAdminCrearUsuario() {
             citas: []
         };
 
-        usuarios.push(nuevoUser);
+        usuarios.push(nuevo);
         guardarUsuarios(usuarios);
-        formAdmin.reset();
+        form.reset();
         renderizarListaUsuariosAdmin();
-        alert(`✅ Usuario "${nuevoUser.perfil.nombre}" (${nuevoUser.usuario}) registrado correctamente.`);
+        alert(`✅ Usuario "${nuevo.perfil.nombre}" creado correctamente.`);
     });
 }
 
@@ -343,93 +417,33 @@ function renderizarListaUsuariosAdmin() {
     const actual = obtenerUsuarioActivo();
     if (!contenedor || !actual || actual.rol !== 'admin') return;
 
-    const usuarios = obtenerUsuarios();
-    contenedor.innerHTML = usuarios.map(u => `
-        <div class="tarjeta-medica" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${u.perfil.foto || './img/ia.jpg'}" style="width:42px; height:42px; border-radius:50%; object-fit:cover;">
-                <div>
-                    <strong>${escaparHTML(u.perfil.nombre)}</strong> 
-                    <span style="font-size:11px; background:#1a5632; color:#fff; padding:2px 6px; border-radius:8px;">${u.rol.toUpperCase()}</span><br>
-                    <small>Usuario: <code>${escaparHTML(u.usuario)}</code> | Clave: <code>${escaparHTML(u.password)}</code> | EPS: ${escaparHTML(u.perfil.eps)} | Edad: ${u.perfil.edad || '--'} años</small>
-                </div>
+    contenedor.innerHTML = obtenerUsuarios().map(u => `
+        <div class="tarjeta-registro" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong>${escaparHTML(u.perfil.nombre)}</strong> (${u.rol.toUpperCase()})<br>
+                <small>Usuario: <code>${escaparHTML(u.usuario)}</code> | Clave: <code>${escaparHTML(u.password)}</code> | EPS: ${escaparHTML(u.perfil.eps)}</small>
             </div>
-            ${u.id !== actual.id ? `<button type="button" onclick="eliminarUsuarioAdmin('${u.id}')" class="btn-salir">Eliminar</button>` : '<small style="color:#1a5632; font-weight:bold;">Sesión actual</small>'}
+            ${u.id !== actual.id ? `<button type="button" onclick="eliminarUsuarioAdmin('${u.id}')" class="btn-salir-mini">Eliminar</button>` : '<small style="color:#1b4d32; font-weight:700;">Activo</small>'}
         </div>
     `).join('');
 }
 
-function eliminarUsuarioAdmin(idUsuario) {
-    if (!confirm('¿Seguro que deseas eliminar este usuario y todo su historial clínico?')) return;
-    let usuarios = obtenerUsuarios().filter(u => u.id !== idUsuario);
-    guardarUsuarios(usuarios);
+function eliminarUsuarioAdmin(id) {
+    if (!confirm('¿Eliminar este usuario y su historial?')) return;
+    guardarUsuarios(obtenerUsuarios().filter(u => u.id !== id));
     renderizarListaUsuariosAdmin();
 }
 
 // =========================================================================
-// 4. NAVEGACIÓN Y RENDERIZADO GENERAL
+// 5. COLUMNA IZQUIERDA: DATOS PERSONALES Y FOTO DE PERFIL
 // =========================================================================
-function configurarNavegacion() {
-    const botonesVista = document.querySelectorAll('[data-vista]');
-    const secciones = {
-        carga: document.getElementById('vista-carga'),
-        medicamentos: document.getElementById('vista-medicamentos'),
-        examenes: document.getElementById('vista-examenes'),
-        bienestar: document.getElementById('vista-bienestar'),
-        admin: document.getElementById('vista-admin')
-    };
-
-    botonesVista.forEach(boton => {
-        boton.addEventListener('click', () => {
-            const destino = boton.getAttribute('data-vista');
-            Object.keys(secciones).forEach(clave => {
-                if (secciones[clave]) {
-                    secciones[clave].style.display = (clave === destino) ? 'block' : 'none';
-                }
-            });
-            if (destino === 'bienestar') renderizarBienestar();
-            if (destino === 'admin') renderizarListaUsuariosAdmin();
-        });
-    });
-}
-
-function renderizarTodo() {
-    const usuario = obtenerUsuarioActivo();
-    if (!usuario) return;
-
-    renderizarEncabezadoPerfil(usuario);
-    renderizarMedicamentos(usuario);
-    renderizarExamenes(usuario, 'Todos');
-    renderizarGaleriaDocumentos(usuario);
-    renderizarCitas(usuario);
-    renderizarRecomendaciones(usuario);
-    renderizarBienestar();
-    if (usuario.rol === 'admin') renderizarListaUsuariosAdmin();
-}
-
-// =========================================================================
-// 5. PERFIL PERSONAL Y SUBIDA DE FOTO DE PERFIL
-// =========================================================================
-function cargarDatosEnFormularioPerfil(usuario) {
-    const p = usuario.perfil;
-    document.getElementById('pacienteNombre').value = p.nombre || '';
-    document.getElementById('pacienteDocumento').value = p.documento || '';
-    document.getElementById('pacienteEdad').value = p.edad || '';
-    document.getElementById('pacienteRH').value = p.rh || '';
-    document.getElementById('pacienteEPS').value = p.eps || 'Salud Total';
-    document.getElementById('pacienteEnfermedad').value = p.enfermedad || 'general';
-    document.getElementById('pacienteAlergias').value = p.alergias || '';
-    document.getElementById('pacienteEmergencia').value = p.emergencia || '';
-
-    const foto = p.foto || './img/ia.jpg';
-    document.getElementById('perfilAvatarPreview').src = foto;
-    document.getElementById('headerAvatar').src = foto;
+function alternarEdicionPerfil(editar) {
+    document.getElementById('vistaLecturaPerfil').style.display = editar ? 'none' : 'flex';
+    document.getElementById('formDatosPersonales').style.display = editar ? 'flex' : 'none';
 }
 
 function configurarPerfilYFoto() {
-    const formPerfil = document.getElementById('formDatosPersonales');
     const inputFoto = document.getElementById('inputFotoPerfil');
-
     if (inputFoto) {
         inputFoto.addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -437,135 +451,163 @@ function configurarPerfilYFoto() {
             const usuario = obtenerUsuarioActivo();
             if (!usuario) return;
 
-            const fotoComprimida = await comprimirImagen(file, 250, 0.75);
-            usuario.perfil.foto = fotoComprimida;
+            const foto = await comprimirImagen(file, 220, 0.75);
+            usuario.perfil.foto = foto;
             actualizarUsuarioActivo(usuario);
-
-            document.getElementById('perfilAvatarPreview').src = fotoComprimida;
-            document.getElementById('headerAvatar').src = fotoComprimida;
-            alert('✅ Foto de perfil actualizada.');
+            renderizarPerfilLateral(usuario);
         });
     }
 
-    if (formPerfil) {
-        formPerfil.addEventListener('submit', (e) => {
+    const form = document.getElementById('formDatosPersonales');
+    if (form) {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
             const usuario = obtenerUsuarioActivo();
             if (!usuario) return;
 
             usuario.perfil.nombre = document.getElementById('pacienteNombre').value.trim();
-            usuario.perfil.documento = document.getElementById('pacienteDocumento').value.trim();
             usuario.perfil.edad = document.getElementById('pacienteEdad').value.trim();
             usuario.perfil.rh = document.getElementById('pacienteRH').value.trim().toUpperCase();
+            usuario.perfil.documento = document.getElementById('pacienteDocumento').value.trim();
             usuario.perfil.eps = document.getElementById('pacienteEPS').value;
             usuario.perfil.enfermedad = document.getElementById('pacienteEnfermedad').value;
             usuario.perfil.alergias = document.getElementById('pacienteAlergias').value.trim();
             usuario.perfil.emergencia = document.getElementById('pacienteEmergencia').value.trim();
 
             actualizarUsuarioActivo(usuario);
+            alternarEdicionPerfil(false);
             renderizarTodo();
-            alert('✅ Perfil clínico actualizado. Los videos, alimentación y deportes se adaptaron a tu perfil.');
         });
     }
 }
 
-function renderizarEncabezadoPerfil(usuario) {
+function renderizarPerfilLateral(usuario) {
     const p = usuario.perfil;
-    const badge = document.getElementById('resumenPacienteHeader');
-    if (!badge) return;
+    const primerNombre = (p.nombre || 'Usuario').split(' ')[0];
+    document.getElementById('headerSaludo').textContent = `Hola, ${primerNombre}`;
 
-    const infoEnfermedad = CONTENIDO_SALUD[p.enfermedad]?.titulo || 'Salud General';
-    badge.textContent = `${p.nombre} | ${p.edad ? p.edad + ' años' : ''} | RH: ${p.rh || '--'} | EPS: ${p.eps} | ${infoEnfermedad}`;
+    const foto = p.foto || './img/ia.jpg';
+    document.getElementById('headerAvatar').src = foto;
+    document.getElementById('perfilAvatarPreview').src = foto;
+
+    document.getElementById('lblNombre').textContent = p.nombre || '--';
+    document.getElementById('lblEdad').textContent = p.edad ? `${p.edad} años` : '--';
+    document.getElementById('lblRH').textContent = p.rh || '--';
+    document.getElementById('lblEPS').textContent = p.eps || '--';
+    document.getElementById('lblEnfermedad').textContent = CONTENIDO_SALUD[p.enfermedad]?.titulo || 'Salud General';
+
+    // Precargar formulario de edición
+    document.getElementById('pacienteNombre').value = p.nombre || '';
+    document.getElementById('pacienteEdad').value = p.edad || '';
+    document.getElementById('pacienteRH').value = p.rh || '';
+    document.getElementById('pacienteDocumento').value = p.documento || '';
+    document.getElementById('pacienteEPS').value = p.eps || 'Salud Total';
+    document.getElementById('pacienteEnfermedad').value = p.enfermedad || 'general';
+    document.getElementById('pacienteAlergias').value = p.alergias || '';
+    document.getElementById('pacienteEmergencia').value = p.emergencia || '';
 }
 
 // =========================================================================
-// 6. LECTURA DE FÓRMULAS/EXÁMENES Y GUARDADO EN HISTORIAL DEL USUARIO
+// 6. DROPZONE Y LECTURA INTELIGENTE DE FÓRMULAS / EXÁMENES
 // =========================================================================
 let archivoActualDataURL = null;
 
+function configurarDropzone() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    if (!dropZone || !fileInput) return;
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) {
+            document.getElementById('dropZoneTexto').textContent = `Archivo seleccionado: ${fileInput.files[0].name}`;
+        }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            document.getElementById('dropZoneTexto').textContent = `Archivo listo: ${e.dataTransfer.files[0].name}`;
+        }
+    });
+}
+
 document.getElementById('fileForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-
     const fileInput = document.getElementById('fileInput');
     const result = document.getElementById('result');
     const preview = document.getElementById('preview');
     const panelConfirmacion = document.getElementById('panelConfirmacionDatos');
     const file = fileInput.files[0];
 
-    const validImageFormats = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const validTextFormats = ['text/plain'];
-    const validPDFFormats = ['application/pdf'];
-
     preview.innerHTML = '';
     panelConfirmacion.style.display = 'none';
     archivoActualDataURL = null;
 
     if (!file) {
-        result.textContent = 'Por favor, selecciona una foto o PDF de tu fórmula o examen.';
-        result.style.color = '#1a5632';
+        result.textContent = 'Selecciona o arrastra una foto o PDF antes de analizar.';
+        result.style.color = '#1b4d32';
         return;
     }
 
-    if (validImageFormats.includes(file.type)) {
-        result.textContent = '⏳ Analizando imagen y preparando respaldo en tu historial...';
-        result.style.color = '#1a5632';
+    const validImages = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-        // Comprimir imagen para guardarla en el historial del paciente
+    if (validImages.includes(file.type)) {
+        result.textContent = '⏳ Leyendo imagen médica (OCR)...';
+        result.style.color = '#1b4d32';
         archivoActualDataURL = await comprimirImagen(file, 700, 0.65);
 
-        preview.innerHTML = `
-            <img src="${archivoActualDataURL}" alt="Documento médico" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ccc;">
-        `;
+        preview.innerHTML = `<img src="${archivoActualDataURL}" style="max-width:100%; max-height:200px; border-radius:8px; margin-top:10px; border:1px solid #dce6e0;">`;
 
         Tesseract.recognize(archivoActualDataURL, 'spa', {
             logger: (m) => {
                 if (m.status === 'recognizing text') {
-                    result.textContent = `⏳ Leyendo documento... ${Math.round(m.progress * 100)}%`;
+                    result.textContent = `⏳ Procesando texto... ${Math.round(m.progress * 100)}%`;
                 }
             }
         }).then(({ data: { text } }) => {
-            result.textContent = '✅ Lectura completada. Confirma los datos para guardarlos en tu perfil.';
-            result.style.color = 'green';
-            procesarYMostrarConfirmacion(text, file.name, 'imagen');
+            result.textContent = '✅ Documento leído. Confirma los datos para guardarlos:';
+            result.style.color = '#1b4d32';
+            mostrarPanelConfirmacion(text, file.name);
         }).catch(() => {
-            result.textContent = '⚠️ Imagen cargada. Completa los campos manualmente para guardarla.';
-            procesarYMostrarConfirmacion('', file.name, 'imagen');
+            result.textContent = '⚠️ Completa los datos manualmente para guardar el archivo:';
+            mostrarPanelConfirmacion('', file.name);
         });
 
-    } else if (validPDFFormats.includes(file.type)) {
-        result.textContent = '⏳ Extrayendo texto del PDF...';
-        const fileReader = new FileReader();
-        fileReader.onload = function () {
-            const typedArray = new Uint8Array(this.result);
-            pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
-                let textPromises = [];
-                for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 5); pageNum++) {
-                    textPromises.push(
-                        pdf.getPage(pageNum)
-                            .then(page => page.getTextContent())
-                            .then(content => content.items.map(i => i.str).join(' '))
-                    );
+    } else if (file.type === 'application/pdf') {
+        result.textContent = '⏳ Extrayendo información del PDF...';
+        const reader = new FileReader();
+        reader.onload = function () {
+            pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdf => {
+                let promesas = [];
+                for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+                    promesas.push(pdf.getPage(i).then(p => p.getTextContent()).then(c => c.items.map(x => x.str).join(' ')));
                 }
-                Promise.all(textPromises).then(pagesText => {
-                    const fullText = pagesText.join('\n');
-                    result.textContent = '✅ PDF procesado. Verifica los datos antes de guardar.';
-                    result.style.color = 'green';
-                    procesarYMostrarConfirmacion(fullText, file.name, 'pdf');
+                Promise.all(promesas).then(paginas => {
+                    result.textContent = '✅ PDF leído. Confirma los datos para guardarlos:';
+                    mostrarPanelConfirmacion(paginas.join('\n'), file.name);
                 });
             });
         };
-        fileReader.readAsArrayBuffer(file);
-
-    } else if (validTextFormats.includes(file.type)) {
+        reader.readAsArrayBuffer(file);
+    } else if (file.type === 'text/plain') {
         const reader = new FileReader();
-        reader.onload = function (event) {
-            result.textContent = '✅ Archivo de texto procesado.';
-            procesarYMostrarConfirmacion(event.target.result, file.name, 'texto');
+        reader.onload = (ev) => {
+            result.textContent = '✅ Texto leído.';
+            mostrarPanelConfirmacion(ev.target.result, file.name);
         };
         reader.readAsText(file);
     } else {
-        result.textContent = 'Formato no soportado. Usa JPG, PNG o PDF.';
-        result.style.color = 'red';
+        result.textContent = 'Formato no soportado. Usa PDF, JPG o PNG.';
+        result.style.color = '#b52b27';
         return;
     }
 
@@ -574,154 +616,120 @@ document.getElementById('fileForm').addEventListener('submit', async function (e
 
 function analizarTextoMedico(texto) {
     const hoy = new Date().toISOString().split('T')[0];
-    const textoLimpio = (texto || '').replace(/\r/g, '');
-    const lineas = textoLimpio.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+    const limpio = (texto || '').replace(/\r/g, '');
+    const lineas = limpio.split('\n').map(l => l.trim()).filter(l => l.length > 2);
 
-    let fechaDetectada = hoy;
-    const matchISO = textoLimpio.match(/\b(20\d{2})[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])\b/);
-    const matchLatam = textoLimpio.match(/\b(0[1-9]|[12]\d|3[01])[-/](0[1-9]|1[0-2])[-/](20\d{2})\b/);
-    if (matchISO) fechaDetectada = `${matchISO[1]}-${matchISO[2]}-${matchISO[3]}`;
-    else if (matchLatam) fechaDetectada = `${matchLatam[3]}-${matchLatam[2]}-${matchLatam[1]}`;
+    let fecha = hoy;
+    const mISO = limpio.match(/\b(20\d{2})[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])\b/);
+    const mLat = limpio.match(/\b(0[1-9]|[12]\d|3[01])[-/](0[1-9]|1[0-2])[-/](20\d{2})\b/);
+    if (mISO) fecha = `${mISO[1]}-${mISO[2]}-${mISO[3]}`;
+    else if (mLat) fecha = `${mLat[3]}-${mLat[2]}-${mLat[1]}`;
 
-    const regexMed = /\b(\d+\s*(mg|g|ml|mcg|ui)|tabletas?|c[aá]psulas?|gotas|jarabe|cada\s+\d+\s*h|posolog[ií]a|f[oó]rmula)\b/i;
-    const regexExam = /\b(hemograma|glucosa|colesterol|triglic[eé]ridos|creatinina|tsh|orina|laboratorio|ecograf[ií]a|radiograf[ií]a|rayos\s*x|resonancia|electrocardiograma|resultado)\b/i;
+    const esMed = /\b(\d+\s*(mg|g|ml|mcg)|tabletas?|c[aá]psulas?|gotas|jarabe|cada\s+\d+\s*h|f[oó]rmula)\b/i.test(limpio);
+    const esEx = /\b(hemograma|glucosa|colesterol|hemoglobina|creatinina|orina|laboratorio|ecograf[ií]a|radiograf[ií]a|resultado)\b/i.test(limpio);
+    const tipo = (esEx && !esMed) ? 'examen' : 'formula';
 
-    const esMedicamento = regexMed.test(textoLimpio);
-    const esExamen = regexExam.test(textoLimpio);
-    const tipo = (esExamen && !esMedicamento) ? 'examen' : 'formula';
+    const lineaMed = lineas.find(l => /\b\d+\s*(mg|g|ml|mcg)\b/i.test(l)) || '';
+    const mFrec = limpio.match(/(cada\s+\d+\s*(horas?|h)|una\s+vez\s+al\s+d[ií]a)/i);
+    const mCant = limpio.match(/(\d+)\s*(tabletas?|c[aá]psulas?|unidades?|pastillas?)/i);
 
-    const lineaMed = lineas.find(l => /\b\d+\s*(mg|g|ml|mcg|ui)\b/i.test(l)) || '';
-    const matchFrec = textoLimpio.match(/(cada\s+\d+\s*(horas?|h|d[ií]as?)|una\s+vez\s+al\s+d[ií]a)/i);
-    const matchCant = textoLimpio.match(/(\d+)\s*(tabletas?|c[aá]psulas?|unidades?|pastillas?|frascos?)/i);
-    const matchDias = textoLimpio.match(/por\s+(\d+)\s*d[ií]as?/i);
+    let sector = 'Laboratorio Clínico';
+    if (/ecograf[ií]a|radiograf[ií]a|rayos\s*x|resonancia/i.test(limpio)) sector = 'Imágenes Diagnósticas';
+    else if (/electrocardiograma|cardiolog[ií]a|presi[oó]n/i.test(limpio)) sector = 'Cardiología';
+    else if (!esEx) sector = 'Medicina General';
 
-    const diasDuracion = matchDias ? parseInt(matchDias[1], 10) : 7;
-
-    let sectorExamen = 'Laboratorio Clínico';
-    if (/ecograf[ií]a|radiograf[ií]a|rayos\s*x|resonancia|tomograf[ií]a/i.test(textoLimpio)) sectorExamen = 'Imágenes Diagnósticas';
-    else if (/electrocardiograma|ecocardiograma|cardiolog[ií]a|presi[oó]n/i.test(textoLimpio)) sectorExamen = 'Cardiología';
-    else if (/optometr[ií]a|oftalmolog[ií]a/i.test(textoLimpio)) sectorExamen = 'Oftalmología';
-    else if (!esExamen) sectorExamen = 'Medicina General';
-
-    const lineaResultado = lineas.find(l => regexExam.test(l)) || (lineas[0] || '');
-    const lineasRec = lineas.filter(l => /\b(recomendaci[oó]n|indicaci[oó]n|evitar|ayunas|dieta|reposo|control|alarma)\b/i.test(l));
+    const lineaEx = lineas.find(l => esEx) || (lineas[0] || '');
+    const recs = lineas.filter(l => /\b(recomendaci[oó]n|evitar|ayunas|dieta|reposo|control|tomar)\b/i.test(l)).slice(0, 3).join('\n');
 
     return {
         tipo,
-        fecha: fechaDetectada,
-        textoCompleto: textoLimpio,
-        medicamento: {
-            nombre: lineaMed.substring(0, 60),
-            frecuencia: matchFrec ? matchFrec[0] : 'Cada 8 horas',
-            cantidad: matchCant ? parseInt(matchCant[1], 10) : 14,
-            fechaFin: sumarDias(fechaDetectada, diasDuracion),
-            proximaToma: obtenerHoraFuturaISO(60)
-        },
-        examen: {
-            sector: sectorExamen,
-            titulo: lineaResultado.substring(0, 60),
-            resultado: textoLimpio.substring(0, 250)
-        },
-        recomendaciones: lineasRec.slice(0, 3).join('\n')
+        fecha,
+        medNombre: lineaMed.substring(0, 55),
+        medFrec: mFrec ? mFrec[0] : 'Cada 8h',
+        medCant: mCant ? parseInt(mCant[1], 10) : 14,
+        medFin: sumarDias(fecha, 7),
+        proximaToma: obtenerHoraFuturaISO(60),
+        exSector: sector,
+        exTitulo: lineaEx.substring(0, 55),
+        exResultado: limpio.substring(0, 180),
+        recomendaciones: recs
     };
 }
 
-function procesarYMostrarConfirmacion(textoExtraido, nombreArchivo, formato) {
-    const datos = analizarTextoMedico(textoExtraido);
+function mostrarPanelConfirmacion(texto, nombreArchivo) {
+    const d = analizarTextoMedico(texto);
     const panel = document.getElementById('panelConfirmacionDatos');
-
     panel.style.display = 'block';
+
     panel.innerHTML = `
-        <h3 style="margin-top:0; color:#1a5632;">📋 Guardar en Historial Personal (${escaparHTML(nombreArchivo)})</h3>
-        <div style="display:grid; gap:10px; margin-top:10px;">
-            <label style="font-size:13px; font-weight:bold;">Tipo de Documento:
-                <select id="confTipo" class="campo-salud">
-                    <option value="formula" ${datos.tipo === 'formula' ? 'selected' : ''}>Fórmula Médica (Medicamentos y Alarma)</option>
-                    <option value="examen" ${datos.tipo === 'examen' ? 'selected' : ''}>Examen / Resultado Médico</option>
-                </select>
-            </label>
+        <h3 style="color:#1b4d32;">Confirmar Datos Extraídos (${escaparHTML(nombreArchivo)})</h3>
+        <div class="form-stack">
+            <select id="confTipo" class="campo-salud">
+                <option value="formula" ${d.tipo === 'formula' ? 'selected' : ''}>Fórmula Médica (Medicamento)</option>
+                <option value="examen" ${d.tipo === 'examen' ? 'selected' : ''}>Examen / Resultado Médico</option>
+            </select>
+            <input type="date" id="confFecha" value="${d.fecha}" class="campo-salud">
 
-            <label style="font-size:13px; font-weight:bold;">Fecha del Documento:
-                <input type="date" id="confFecha" value="${datos.fecha}" class="campo-salud">
-            </label>
-
-            <!-- Bloque Fórmula -->
-            <div id="bloqueConfFormula" style="display:${datos.tipo === 'formula' ? 'grid' : 'none'}; gap:8px; background:#fff; padding:10px; border-radius:8px; border:1px solid #d5e8dc;">
-                <strong style="color:#1a5632; font-size:14px;">💊 Medicamento y Programación de Alarma</strong>
-                <input type="text" id="confMedNombre" value="${escaparHTML(datos.medicamento.nombre)}" placeholder="Nombre y dosis (ej. Ibuprofeno 400mg)" class="campo-salud">
-                <input type="text" id="confMedFrecuencia" value="${escaparHTML(datos.medicamento.frecuencia)}" placeholder="Frecuencia (ej. Cada 8 horas)" class="campo-salud">
-                <div style="display:flex; gap:8px;">
-                    <label style="flex:1; font-size:12px;">Cantidad:
-                        <input type="number" id="confMedCantidad" value="${datos.medicamento.cantidad}" min="1" class="campo-salud">
-                    </label>
-                    <label style="flex:1; font-size:12px;">Fecha Fin:
-                        <input type="date" id="confMedFin" value="${datos.medicamento.fechaFin}" class="campo-salud">
-                    </label>
+            <div id="bloqueFormula" class="form-stack" style="display:${d.tipo === 'formula' ? 'flex' : 'none'};">
+                <input type="text" id="confMedNombre" value="${escaparHTML(d.medNombre)}" placeholder="Medicamento y dosis" class="campo-salud">
+                <div style="display:flex; gap:6px;">
+                    <input type="text" id="confMedFrec" value="${escaparHTML(d.medFrec)}" placeholder="Frecuencia" class="campo-salud">
+                    <input type="number" id="confMedCant" value="${d.medCant}" min="1" placeholder="Cant." class="campo-salud">
                 </div>
-                <label style="font-size:12px; font-weight:bold; color:#1a5632;">⏰ Próxima Toma Programada (Aviso 30 min antes y hora exacta):
-                    <input type="datetime-local" id="confMedProximaToma" value="${datos.medicamento.proximaToma}" class="campo-salud">
+                <label class="label-campo">Próxima toma (Alarma 30 min antes y hora exacta):
+                    <input type="datetime-local" id="confMedToma" value="${d.proximaToma}" class="campo-salud">
                 </label>
             </div>
 
-            <!-- Bloque Examen -->
-            <div id="bloqueConfExamen" style="display:${datos.tipo === 'examen' ? 'grid' : 'none'}; gap:8px; background:#fff; padding:10px; border-radius:8px; border:1px solid #d5e8dc;">
-                <strong style="color:#1a5632; font-size:14px;">🔬 Sector y Resultado del Examen</strong>
-                <select id="confExamSector" class="campo-salud">
-                    <option value="Laboratorio Clínico" ${datos.examen.sector === 'Laboratorio Clínico' ? 'selected' : ''}>Laboratorio Clínico</option>
-                    <option value="Imágenes Diagnósticas" ${datos.examen.sector === 'Imágenes Diagnósticas' ? 'selected' : ''}>Imágenes Diagnósticas</option>
-                    <option value="Cardiología" ${datos.examen.sector === 'Cardiología' ? 'selected' : ''}>Cardiología</option>
-                    <option value="Oftalmología" ${datos.examen.sector === 'Oftalmología' ? 'selected' : ''}>Oftalmología</option>
-                    <option value="Medicina General" ${datos.examen.sector === 'Medicina General' ? 'selected' : ''}>Medicina General</option>
+            <div id="bloqueExamen" class="form-stack" style="display:${d.tipo === 'examen' ? 'flex' : 'none'};">
+                <select id="confExSector" class="campo-salud">
+                    <option value="Laboratorio Clínico" ${d.exSector === 'Laboratorio Clínico' ? 'selected' : ''}>Laboratorio Clínico</option>
+                    <option value="Imágenes Diagnósticas" ${d.exSector === 'Imágenes Diagnósticas' ? 'selected' : ''}>Imágenes Diagnósticas</option>
+                    <option value="Cardiología" ${d.exSector === 'Cardiología' ? 'selected' : ''}>Cardiología</option>
+                    <option value="Medicina General" ${d.exSector === 'Medicina General' ? 'selected' : ''}>Medicina General</option>
                 </select>
-                <input type="text" id="confExamTitulo" value="${escaparHTML(datos.examen.titulo)}" placeholder="Nombre del examen" class="campo-salud">
-                <textarea id="confExamResultado" rows="3" placeholder="Resultados obtenidos" class="campo-salud">${escaparHTML(datos.examen.resultado)}</textarea>
+                <input type="text" id="confExTitulo" value="${escaparHTML(d.exTitulo)}" placeholder="Nombre del examen" class="campo-salud">
+                <input type="text" id="confExResultado" value="${escaparHTML(d.exResultado)}" placeholder="Resultado (ej. 95 mg/dL Normal)" class="campo-salud">
             </div>
 
-            <label style="font-size:13px; font-weight:bold;">Recomendaciones Médicas:
-                <textarea id="confRecomendaciones" rows="2" placeholder="Indicaciones de cuidado..." class="campo-salud">${escaparHTML(datos.recomendaciones)}</textarea>
-            </label>
-
-            <button type="button" id="btnConfirmarGuardar" class="container__boton_info" style="height:40px;">
-                Guardar Documento y Activar Seguimiento
-            </button>
+            <textarea id="confRecs" rows="2" placeholder="Recomendaciones médicas (una por línea)..." class="campo-salud">${escaparHTML(d.recomendaciones)}</textarea>
+            <button type="button" id="btnGuardarDoc" class="btn-primario">Guardar en mi Perfil</button>
         </div>
     `;
 
     document.getElementById('confTipo').addEventListener('change', (e) => {
-        const esFormula = e.target.value === 'formula';
-        document.getElementById('bloqueConfFormula').style.display = esFormula ? 'grid' : 'none';
-        document.getElementById('bloqueConfExamen').style.display = esFormula ? 'none' : 'grid';
+        const esF = e.target.value === 'formula';
+        document.getElementById('bloqueFormula').style.display = esF ? 'flex' : 'none';
+        document.getElementById('bloqueExamen').style.display = esF ? 'none' : 'flex';
     });
 
-    document.getElementById('btnConfirmarGuardar').addEventListener('click', () => {
+    document.getElementById('btnGuardarDoc').addEventListener('click', () => {
         const usuario = obtenerUsuarioActivo();
         if (!usuario) return;
 
-        const tipoFinal = document.getElementById('confTipo').value;
-        const fechaDoc = document.getElementById('confFecha').value;
+        const tipo = document.getElementById('confTipo').value;
+        const fecha = document.getElementById('confFecha').value;
 
-        // 1. Guardar respaldo del documento/imagen en el historial del paciente
         usuario.documentos.unshift({
             id: Date.now(),
-            nombreArchivo: nombreArchivo,
-            tipo: tipoFinal,
-            fecha: fechaDoc,
+            nombreArchivo,
+            tipo,
+            fecha,
             imagenDataURL: archivoActualDataURL,
-            textoExtraido: textoExtraido || 'Documento registrado manualmente'
+            textoExtraido: texto || 'Registro manual'
         });
 
-        // 2. Guardar en Medicamentos o Exámenes
-        if (tipoFinal === 'formula') {
-            const nombreMed = document.getElementById('confMedNombre').value.trim();
-            if (nombreMed) {
+        if (tipo === 'formula') {
+            const nombre = document.getElementById('confMedNombre').value.trim();
+            if (nombre) {
                 usuario.medicamentos.unshift({
                     id: Date.now() + 1,
-                    nombre: nombreMed,
-                    frecuencia: document.getElementById('confMedFrecuencia').value.trim(),
-                    cantidad: parseInt(document.getElementById('confMedCantidad').value, 10) || 1,
-                    fechaInicio: fechaDoc,
-                    fechaFin: document.getElementById('confMedFin').value || fechaDoc,
-                    proximaToma: document.getElementById('confMedProximaToma').value,
+                    nombre,
+                    frecuencia: document.getElementById('confMedFrec').value.trim(),
+                    cantidad: parseInt(document.getElementById('confMedCant').value, 10) || 1,
+                    fechaInicio: fecha,
+                    fechaFin: sumarDias(fecha, 7),
+                    proximaToma: document.getElementById('confMedToma').value,
                     alerta30Enviada: false,
                     alertaHoraEnviada: false
                 });
@@ -729,21 +737,21 @@ function procesarYMostrarConfirmacion(textoExtraido, nombreArchivo, formato) {
         } else {
             usuario.examenes.unshift({
                 id: Date.now() + 2,
-                sector: document.getElementById('confExamSector').value,
-                titulo: document.getElementById('confExamTitulo').value.trim() || 'Examen médico',
-                fecha: fechaDoc,
-                resultado: document.getElementById('confExamResultado').value.trim()
+                sector: document.getElementById('confExSector').value,
+                titulo: document.getElementById('confExTitulo').value.trim() || 'Examen médico',
+                fecha,
+                resultado: document.getElementById('confExResultado').value.trim(),
+                porcentaje: 70
             });
         }
 
-        // 3. Guardar recomendaciones
-        const recTexto = document.getElementById('confRecomendaciones').value.trim();
-        if (recTexto) {
-            recTexto.split('\n').map(r => r.trim()).filter(Boolean).forEach((linea, idx) => {
+        const recs = document.getElementById('confRecs').value.trim();
+        if (recs) {
+            recs.split('\n').map(r => r.trim()).filter(Boolean).forEach((txt, idx) => {
                 usuario.recomendaciones.unshift({
                     id: Date.now() + 10 + idx,
-                    texto: linea,
-                    fecha: fechaDoc,
+                    texto: txt,
+                    fecha,
                     completada: false
                 });
             });
@@ -751,252 +759,181 @@ function procesarYMostrarConfirmacion(textoExtraido, nombreArchivo, formato) {
 
         actualizarUsuarioActivo(usuario);
         renderizarTodo();
-        panel.innerHTML = `<p style="color:#1a5632; font-weight:bold; margin:0;">✅ Documento guardado en tu historial y alarmas programadas correctamente.</p>`;
+        panel.innerHTML = `<strong style="color:#1b4d32;">✅ Guardado correctamente en Medicamentos, Resultados y Recomendaciones.</strong>`;
     });
 }
 
 // =========================================================================
-// 7. MOTOR DE SONIDO (WEB AUDIO API) Y ALERTAS DE CITAS / MEDICINAS
+// 7. RENDERIZADO DE TODAS LAS SECCIONES (INICIO, LATERALES, CUIDADOS, HISTORIAL)
 // =========================================================================
-function reproducirSonidoAlerta() {
-    try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioCtx();
-        const notas = [523.25, 659.25, 783.99, 1046.50]; // Acorde de alerta clínica (Do-Mi-Sol-Do)
-
-        notas.forEach((frecuencia, i) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(frecuencia, ctx.currentTime + i * 0.18);
-            gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.18);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.18 + 0.35);
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(ctx.currentTime + i * 0.18);
-            osc.stop(ctx.currentTime + i * 0.18 + 0.36);
-        });
-    } catch (e) {
-        console.warn('Audio bloqueado hasta interacción del usuario:', e);
-    }
-}
-
-function probarSonidoAlerta() {
-    reproducirSonidoAlerta();
-    mostrarBannerAlerta('🔔 Prueba de Alarma Activa: Así sonarán tus recordatorios 1 día antes y 30 min antes de citas y medicinas.');
-}
-
-function mostrarBannerAlerta(mensaje) {
-    const banner = document.getElementById('bannerAlertaGlobal');
-    const texto = document.getElementById('textoAlertaGlobal');
-    if (!banner || !texto) return;
-    texto.textContent = mensaje;
-    banner.style.display = 'flex';
-}
-
-function cerrarBannerAlerta() {
-    const banner = document.getElementById('bannerAlertaGlobal');
-    if (banner) banner.style.display = 'none';
-}
-
-function verificarAlarmasTiempoReal() {
+function renderizarTodo() {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
 
-    const ahora = new Date();
-    let huboCambios = false;
+    renderizarPerfilLateral(usuario);
+    renderizarResumenInicio(usuario);
+    renderizarCitas(usuario);
+    renderizarRecomendaciones(usuario);
+    renderizarHistorialCompleto(usuario);
+    renderizarBienestar();
+}
 
-    // 1. Verificar Citas (Aviso 1 día antes y 30 minutos antes)
-    usuario.citas.forEach(cita => {
-        if (!cita.fecha || !cita.hora) return;
-        const fechaCita = new Date(`${cita.fecha}T${cita.hora}:00`);
-        const diffMinutos = (fechaCita - ahora) / (1000 * 60);
-
-        // Aviso 1 día antes (entre 31 min y 1440 min = 24 horas)
-        if (diffMinutos > 30 && diffMinutos <= 1440 && !cita.alerta1DiaEnviada) {
-            cita.alerta1DiaEnviada = true;
-            huboCambios = true;
-            reproducirSonidoAlerta();
-            mostrarBannerAlerta(`📅 RECORDATORIO (1 DÍA ANTES): Tienes cita de ${cita.especialidad} el ${cita.fecha} a las ${cita.hora} en ${cita.lugar}.`);
+function renderizarResumenInicio(usuario) {
+    // 1. Subcard Izquierda: Medicamentos Activos (Como en la foto)
+    const contMed = document.getElementById('resumenMedicamentosActivos');
+    if (contMed) {
+        if (usuario.medicamentos.length === 0) {
+            contMed.innerHTML = '<p class="texto-suave">Sin medicamentos activos.</p>';
+        } else {
+            contMed.innerHTML = usuario.medicamentos.slice(0, 4).map(m => `
+                <div class="item-med-compacto">
+                    <span class="check-circulo">✓</span>
+                    <div style="flex:1;">
+                        <strong>${escaparHTML(m.nombre)}</strong> - ${escaparHTML(m.frecuencia)}<br>
+                        <small style="color:#5a6b61;">Quedan ${m.cantidad} und.</small>
+                    </div>
+                    <button type="button" onclick="registrarTomaMedicamento(${m.id})" class="btn-secundario" style="padding:3px 8px; font-size:11px;">Tomar</button>
+                </div>
+            `).join('');
         }
+    }
 
-        // Aviso 30 minutos antes (entre 0 y 30 min)
-        if (diffMinutos > 0 && diffMinutos <= 30 && !cita.alerta30MinEnviada) {
-            cita.alerta30MinEnviada = true;
-            huboCambios = true;
-            reproducirSonidoAlerta();
-            mostrarBannerAlerta(`⏰ ¡URGENTE (30 MIN ANTES)! Tu cita de ${cita.especialidad} es a las ${cita.hora} (${cita.lugar}).`);
+    // 2. Subcard Derecha: Resultados Recientes con barras (Como en la foto)
+    const contRes = document.getElementById('resumenResultadosRecientes');
+    if (contRes) {
+        if (usuario.examenes.length === 0) {
+            contRes.innerHTML = '<p class="texto-suave">Sin resultados recientes.</p>';
+        } else {
+            contRes.innerHTML = usuario.examenes.slice(0, 4).map(ex => `
+                <div style="font-size:13px;">
+                    <div><strong>${escaparHTML(ex.titulo)}:</strong> ${escaparHTML(ex.resultado)}</div>
+                    <div class="barra-progreso-bg">
+                        <div class="barra-progreso-fill" style="width:${ex.porcentaje || 70}%;"></div>
+                    </div>
+                </div>
+            `).join('');
         }
-    });
-
-    // 2. Verificar Medicamentos (Aviso 30 minutos antes y hora exacta)
-    usuario.medicamentos.forEach(med => {
-        if (!med.proximaToma || med.cantidad <= 0) return;
-        const fechaToma = new Date(med.proximaToma);
-        const diffMinutos = (fechaToma - ahora) / (1000 * 60);
-
-        if (diffMinutos > 0 && diffMinutos <= 30 && !med.alerta30Enviada) {
-            med.alerta30Enviada = true;
-            huboCambios = true;
-            reproducirSonidoAlerta();
-            mostrarBannerAlerta(`💊 PRÓXIMA MEDICINA (EN ${Math.ceil(diffMinutos)} MIN): Prepárate para tomar ${med.nombre}.`);
-        }
-
-        if (diffMinutos <= 0 && diffMinutos >= -20 && !med.alertaHoraEnviada) {
-            med.alertaHoraEnviada = true;
-            huboCambios = true;
-            reproducirSonidoAlerta();
-            mostrarBannerAlerta(`🚨 ¡HORA DE TU MEDICINA! Debes tomar ahora: ${med.nombre} (${med.frecuencia}).`);
-        }
-    });
-
-    if (huboCambios) {
-        actualizarUsuarioActivo(usuario);
-        renderizarCitas(usuario);
-        renderizarMedicamentos(usuario);
     }
 }
 
-// =========================================================================
-// 8. RENDERIZADO DE MEDICAMENTOS, EXÁMENES, GALERÍA, CITAS Y BIENESTAR
-// =========================================================================
-function renderizarMedicamentos(usuario) {
-    const contenedor = document.getElementById('listaMedicamentos');
-    if (!contenedor) return;
-
-    if (usuario.medicamentos.length === 0) {
-        contenedor.innerHTML = '<p class="texto-suave">Aún no tienes medicamentos registrados.</p>';
-        return;
+function renderizarHistorialCompleto(usuario, sectorFiltro = 'Todos') {
+    const contMed = document.getElementById('listaMedicamentos');
+    if (contMed) {
+        contMed.innerHTML = usuario.medicamentos.length === 0
+            ? '<p class="texto-suave">No tienes medicamentos registrados.</p>'
+            : usuario.medicamentos.map(m => `
+                <div class="tarjeta-registro" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>💊 ${escaparHTML(m.nombre)}</strong> (${escaparHTML(m.frecuencia)})<br>
+                        <small>Cantidad: ${m.cantidad} | Vigencia: ${m.fechaInicio} al ${m.fechaFin}</small>
+                    </div>
+                    <button type="button" onclick="eliminarItemUsuario('medicamentos', ${m.id})" class="btn-salir-mini">✕</button>
+                </div>
+            `).join('');
     }
 
-    contenedor.innerHTML = usuario.medicamentos.map(med => `
-        <div class="tarjeta-medica" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-            <div>
-                <strong style="color:#1a5632; font-size:15px;">💊 ${escaparHTML(med.nombre)}</strong>
-                <p style="margin:3px 0; font-size:13px;">⏱️ <strong>Frecuencia:</strong> ${escaparHTML(med.frecuencia)} | 📦 <strong>Restantes:</strong> ${med.cantidad} und.</p>
-                <p style="margin:3px 0; font-size:13px;">📅 <strong>Tratamiento:</strong> ${med.fechaInicio} al ${med.fechaFin}</p>
-                <p style="margin:3px 0; font-size:13px; color:#0e3b5c;">⏰ <strong>Próxima alarma:</strong> ${med.proximaToma ? med.proximaToma.replace('T', ' ') : 'Sin programar'}</p>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <button type="button" onclick="registrarTomaMedicamento(${med.id})" class="btn-secundario">✅ Tomar Dosis</button>
-                <button type="button" onclick="eliminarItemUsuario('medicamentos', ${med.id})" class="btn-salir">Eliminar</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function registrarTomaMedicamento(idMed) {
-    const usuario = obtenerUsuarioActivo();
-    if (!usuario) return;
-
-    const med = usuario.medicamentos.find(m => m.id === idMed);
-    if (med && med.cantidad > 0) {
-        med.cantidad -= 1;
-        // Reprogramar siguiente toma sumando horas según frecuencia (por defecto 8 horas)
-        const matchHoras = med.frecuencia.match(/(\d+)/);
-        const horas = matchHoras ? parseInt(matchHoras[1], 10) : 8;
-        med.proximaToma = obtenerHoraFuturaISO(horas * 60);
-        med.alerta30Enviada = false;
-        med.alertaHoraEnviada = false;
-        actualizarUsuarioActivo(usuario);
-        renderizarMedicamentos(usuario);
-        alert(`✅ Toma registrada. Quedan ${med.cantidad} unidades. Próxima alarma en ${horas} horas.`);
-    }
-}
-
-function renderizarExamenes(usuario, sectorFiltro = 'Todos') {
-    const contenedor = document.getElementById('listaExamenes');
+    const contEx = document.getElementById('listaExamenes');
     const filtros = document.getElementById('filtrosSector');
-    if (!contenedor || !filtros) return;
+    if (contEx && filtros) {
+        const sectores = ['Todos', ...new Set(usuario.examenes.map(e => e.sector))];
+        filtros.innerHTML = sectores.map(s => `
+            <button type="button" onclick="filtrarSector('${s}')" class="btn-secundario"
+                style="margin-right:5px; background:${sectorFiltro === s ? '#1b4d32' : '#e6f2eb'}; color:${sectorFiltro === s ? '#fff' : '#1b4d32'};">
+                ${s}
+            </button>
+        `).join('');
 
-    if (usuario.examenes.length === 0) {
-        filtros.innerHTML = '';
-        contenedor.innerHTML = '<p class="texto-suave">No hay exámenes registrados todavía.</p>';
-        return;
+        const lista = sectorFiltro === 'Todos' ? usuario.examenes : usuario.examenes.filter(e => e.sector === sectorFiltro);
+        contEx.innerHTML = lista.length === 0
+            ? '<p class="texto-suave">No hay exámenes en este sector.</p>'
+            : lista.map(ex => `
+                <div class="tarjeta-registro" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="background:#e6f2eb; color:#1b4d32; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:700;">${escaparHTML(ex.sector)}</span>
+                        <small style="margin-left:6px;">${ex.fecha}</small><br>
+                        <strong>${escaparHTML(ex.titulo)}:</strong> ${escaparHTML(ex.resultado)}
+                    </div>
+                    <button type="button" onclick="eliminarItemUsuario('examenes', ${ex.id})" class="btn-salir-mini">✕</button>
+                </div>
+            `).join('');
     }
 
-    const sectores = ['Todos', ...new Set(usuario.examenes.map(e => e.sector))];
-    filtros.innerHTML = sectores.map(sec => `
-        <button type="button" onclick="filtrarSectorExamenes('${sec}')"
-            style="margin:3px; padding:6px 12px; border-radius:15px; border:1px solid #1a5632; cursor:pointer;
-            background:${sectorFiltro === sec ? '#1a5632' : '#fff'}; color:${sectorFiltro === sec ? '#fff' : '#1a5632'}; font-weight:bold;">
-            ${sec}
-        </button>
-    `).join('');
-
-    const lista = sectorFiltro === 'Todos' ? usuario.examenes : usuario.examenes.filter(e => e.sector === sectorFiltro);
-
-    contenedor.innerHTML = lista.map(ex => `
-        <div class="tarjeta-medica" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
-            <div>
-                <span style="background:#e1f2e8; color:#1a5632; padding:2px 8px; border-radius:10px; font-size:12px; font-weight:bold;">${escaparHTML(ex.sector)}</span>
-                <span style="font-size:12px; color:#555; margin-left:6px;">📅 ${ex.fecha}</span>
-                <h4 style="margin:6px 0 4px 0;">${escaparHTML(ex.titulo)}</h4>
-                <p style="margin:0; font-size:13px; white-space:pre-wrap;">${escaparHTML(ex.resultado)}</p>
-            </div>
-            <button type="button" onclick="eliminarItemUsuario('examenes', ${ex.id})" class="btn-salir">✕</button>
-        </div>
-    `).join('');
-}
-
-function filtrarSectorExamenes(sector) {
-    const usuario = obtenerUsuarioActivo();
-    if (usuario) renderizarExamenes(usuario, sector);
-}
-
-function renderizarGaleriaDocumentos(usuario) {
     const galeria = document.getElementById('galeriaDocumentos');
-    if (!galeria) return;
-
-    if (!usuario.documentos || usuario.documentos.length === 0) {
-        galeria.innerHTML = '<p class="texto-suave">Las fotos y documentos que subas quedarán archivados aquí.</p>';
-        return;
+    if (galeria) {
+        galeria.innerHTML = (!usuario.documentos || usuario.documentos.length === 0)
+            ? '<p class="texto-suave">Aún no hay archivos guardados.</p>'
+            : usuario.documentos.map(doc => `
+                <div class="doc-card">
+                    ${doc.imagenDataURL ? `<img src="${doc.imagenDataURL}" alt="Doc">` : `<div style="height:100px; background:#e6f2eb; display:flex; align-items:center; justify-content:center; border-radius:6px; margin-bottom:6px; font-weight:700; color:#1b4d32;">📄 PDF</div>`}
+                    <strong>${escaparHTML(doc.nombreArchivo)}</strong><br>
+                    <small>${doc.fecha}</small>
+                    <div style="display:flex; gap:4px; margin-top:6px;">
+                        <button type="button" onclick="abrirModalDocumento(${doc.id})" class="btn-primario" style="flex:1; padding:4px; font-size:11px;">Ver</button>
+                        <button type="button" onclick="eliminarItemUsuario('documentos', ${doc.id})" class="btn-salir-mini" style="padding:4px 7px;">✕</button>
+                    </div>
+                </div>
+            `).join('');
     }
-
-    galeria.innerHTML = usuario.documentos.map(doc => `
-        <div class="doc-card">
-            ${doc.imagenDataURL
-                ? `<img src="${doc.imagenDataURL}" alt="${escaparHTML(doc.nombreArchivo)}">`
-                : `<div style="height:110px; background:#e1f2e8; display:flex; align-items:center; justify-content:center; border-radius:6px; margin-bottom:6px; font-weight:bold; color:#1a5632;">📄 PDF / TEXTO</div>`
-            }
-            <strong>${escaparHTML(doc.nombreArchivo)}</strong><br>
-            <span style="color:#555;">📅 ${doc.fecha} | ${doc.tipo.toUpperCase()}</span><br>
-            <div style="display:flex; gap:5px; margin-top:6px;">
-                <button type="button" onclick="abrirModalDocumento(${doc.id})" class="btn-eps" style="flex:1;">Ver</button>
-                <button type="button" onclick="eliminarItemUsuario('documentos', ${doc.id})" class="btn-salir" style="padding:4px 8px;">✕</button>
-            </div>
-        </div>
-    `).join('');
 }
 
-function abrirModalDocumento(idDoc) {
+function filtrarSector(sector) {
     const usuario = obtenerUsuarioActivo();
-    if (!usuario) return;
-    const doc = usuario.documentos.find(d => d.id === idDoc);
-    if (!doc) return;
-
-    document.getElementById('modalDocTitulo').textContent = `${doc.nombreArchivo} (${doc.fecha})`;
-    document.getElementById('modalDocCuerpo').innerHTML = `
-        ${doc.imagenDataURL ? `<img src="${doc.imagenDataURL}" style="max-width:100%; border-radius:8px; margin-bottom:12px;">` : ''}
-        <h4>Texto Extraído / Registro:</h4>
-        <pre style="background:#f4fbf7; padding:10px; border-radius:8px; white-space:pre-wrap; font-size:13px;">${escaparHTML(doc.textoExtraido)}</pre>
-    `;
-    document.getElementById('modalDocumento').style.display = 'flex';
-}
-
-function cerrarModalDocumento() {
-    document.getElementById('modalDocumento').style.display = 'none';
+    if (usuario) renderizarHistorialCompleto(usuario, sector);
 }
 
 // =========================================================================
-// 9. CITAS MÉDICAS Y RECOMENDACIONES
+// 8. SUBPÁGINA MIS CUIDADOS (RECARGA COLUMNA CENTRAL)
+// =========================================================================
+function renderizarBienestar() {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) return;
+
+    const cond = usuario.perfil.enfermedad || 'general';
+    const edad = parseInt(usuario.perfil.edad, 10) || 30;
+    const plan = CONTENIDO_SALUD[cond] || CONTENIDO_SALUD.general;
+
+    let guiaEdad = `Adulto (${edad} años): actividad física moderada y constante.`;
+    if (edad >= 60) guiaEdad = `Adulto mayor (${edad} años): prioriza ejercicios de bajo impacto y equilibrio.`;
+    else if (edad < 18) guiaEdad = `Etapa juvenil (${edad} años): deportes recreativos e hidratación constante.`;
+
+    document.getElementById('encabezadoBienestar').innerHTML = `
+        <strong>Plan activo: ${plan.titulo}</strong><br>
+        <span>${guiaEdad}</span>
+    `;
+
+    document.getElementById('contenedorVideosSalud').innerHTML = plan.videos.map((v, i) => `
+        <div class="video-card">
+            <iframe src="${v.urlEmbed}" title="${escaparHTML(v.titulo)}" allowfullscreen loading="lazy"></iframe>
+            <div style="padding:10px;">
+                <small style="color:#1b4d32; font-weight:700;">VIDEO ${i + 1} DE 3</small>
+                <p style="margin:4px 0 8px 0; font-size:13px; font-weight:600;">${escaparHTML(v.titulo)}</p>
+                <a href="${v.urlDirecta}" target="_blank" rel="noopener" style="font-size:12px; color:#1b4d32; font-weight:700;">Ver en YouTube ↗</a>
+            </div>
+        </div>
+    `).join('');
+
+    document.getElementById('contenedorAlimentacion').innerHTML = `
+        <ul style="margin:0; padding-left:18px; line-height:1.6;">
+            ${plan.alimentacion.map(tip => `<li>${escaparHTML(tip)}</li>`).join('')}
+        </ul>
+    `;
+
+    document.getElementById('contenedorDeportes').innerHTML = plan.deportes.map(d => `
+        <div class="deporte-card">
+            <strong style="color:#1b4d32;">🏅 ${escaparHTML(d.nombre)}</strong>
+            <p style="margin:6px 0 0 0; font-size:12px; color:#3a4a41;">${escaparHTML(d.detalle)}</p>
+        </div>
+    `).join('');
+}
+
+// =========================================================================
+// 9. COLUMNA DERECHA: CITAS, RECOMENDACIONES Y ALARMAS SONORAS
 // =========================================================================
 function configurarCitas() {
-    const formCitas = document.getElementById('formCitas');
-    if (!formCitas) return;
+    const form = document.getElementById('formCitas');
+    if (!form) return;
 
-    formCitas.addEventListener('submit', (e) => {
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
         const usuario = obtenerUsuarioActivo();
         if (!usuario) return;
@@ -1014,140 +951,168 @@ function configurarCitas() {
         usuario.citas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
         actualizarUsuarioActivo(usuario);
         renderizarCitas(usuario);
-        formCitas.reset();
+        form.reset();
         verificarAlarmasTiempoReal();
     });
 }
 
 function renderizarCitas(usuario) {
-    const contenedor = document.getElementById('listaCitas');
-    if (!contenedor) return;
+    const cont = document.getElementById('listaCitas');
+    if (!cont) return;
 
-    if (usuario.citas.length === 0) {
-        contenedor.innerHTML = '<p class="texto-suave">No tienes citas programadas.</p>';
-        return;
-    }
-
-    contenedor.innerHTML = usuario.citas.map(cita => `
-        <div style="background:#f4fbf7; border-left:4px solid #1a5632; padding:8px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <strong style="color:#1a5632;">${escaparHTML(cita.especialidad)}</strong><br>
-                <span style="font-size:12px;">📅 ${cita.fecha} | 🕒 ${cita.hora}</span><br>
-                <span style="font-size:12px; color:#555;">📍 ${escaparHTML(cita.lugar)}</span><br>
-                <span style="font-size:11px; color:#0e3b5c;">🔔 Alerta: 1 día y 30 min antes</span>
+    cont.innerHTML = usuario.citas.length === 0
+        ? '<p class="texto-suave">Sin citas agendadas.</p>'
+        : usuario.citas.map(c => `
+            <div class="cita-row">
+                <div>
+                    <strong>${escaparHTML(c.especialidad)}</strong> - ${c.fecha}, ${c.hora}<br>
+                    <small style="color:#5a6b61;">📍 ${escaparHTML(c.lugar)}</small>
+                </div>
+                <button type="button" onclick="eliminarItemUsuario('citas', ${c.id})" style="background:none; border:none; color:#b52b27; cursor:pointer; font-weight:700;">✕</button>
             </div>
-            <button type="button" onclick="eliminarItemUsuario('citas', ${cita.id})" style="background:transparent; border:none; color:#c0392b; font-weight:bold; cursor:pointer;">✕</button>
-        </div>
-    `).join('');
+        `).join('');
+}
+
+function configurarNuevaRecomendacion() {
+    const form = document.getElementById('formNuevaRecomendacion');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('inputNuevaRec');
+        const texto = input.value.trim();
+        if (!texto) return;
+
+        const usuario = obtenerUsuarioActivo();
+        if (!usuario) return;
+
+        usuario.recomendaciones.push({
+            id: Date.now(),
+            texto,
+            fecha: new Date().toISOString().split('T')[0],
+            completada: false
+        });
+        actualizarUsuarioActivo(usuario);
+        renderizarRecomendaciones(usuario);
+        input.value = '';
+    });
 }
 
 function renderizarRecomendaciones(usuario) {
-    const contenedor = document.getElementById('listaRecomendaciones');
-    if (!contenedor) return;
+    const cont = document.getElementById('listaRecomendaciones');
+    if (!cont) return;
 
-    if (usuario.recomendaciones.length === 0) {
-        contenedor.innerHTML = '<p class="texto-suave">Sin indicaciones médicas pendientes.</p>';
-        return;
-    }
-
-    contenedor.innerHTML = usuario.recomendaciones.map(rec => `
-        <div style="display:flex; align-items:flex-start; gap:6px; padding:6px; border-bottom:1px solid #eee;">
-            <input type="checkbox" ${rec.completada ? 'checked' : ''} onchange="alternarRecomendacionUsuario(${rec.id})" style="margin-top:3px; cursor:pointer;">
-            <span style="flex:1; font-size:13px; text-decoration:${rec.completada ? 'line-through' : 'none'}; color:${rec.completada ? '#888' : '#222'};">
-                ${escaparHTML(rec.texto)}
-            </span>
-            <button type="button" onclick="eliminarItemUsuario('recomendaciones', ${rec.id})" style="background:transparent; border:none; color:#c0392b; cursor:pointer;">✕</button>
-        </div>
-    `).join('');
+    cont.innerHTML = usuario.recomendaciones.length === 0
+        ? '<p class="texto-suave">Sin recomendaciones registradas.</p>'
+        : usuario.recomendaciones.map(r => `
+            <div class="rec-row">
+                <input type="checkbox" ${r.completada ? 'checked' : ''} onchange="alternarRecomendacionUsuario(${r.id})">
+                <span style="flex:1; text-decoration:${r.completada ? 'line-through' : 'none'}; color:${r.completada ? '#7a8a81' : '#1e2923'};">
+                    ${escaparHTML(r.texto)}
+                </span>
+                <button type="button" onclick="eliminarItemUsuario('recomendaciones', ${r.id})" style="background:none; border:none; color:#b52b27; cursor:pointer;">✕</button>
+            </div>
+        `).join('');
 }
 
-// =========================================================================
-// 10. MÓDULO DE BIENESTAR: 3 VIDEOS, ALIMENTACIÓN Y DEPORTES POR PERFIL
-// =========================================================================
-function renderizarBienestar() {
+function reproducirSonidoAlerta() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.16);
+            gain.gain.setValueAtTime(0.22, ctx.currentTime + i * 0.16);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.16 + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.16);
+            osc.stop(ctx.currentTime + i * 0.16 + 0.32);
+        });
+    } catch (e) {}
+}
+
+function probarSonidoAlerta() {
+    reproducirSonidoAlerta();
+    mostrarBannerAlerta('🔔 Alarma activada: Recibirás avisos sonoros 1 día antes y 30 min antes de citas y medicinas.');
+}
+
+function mostrarBannerAlerta(msg) {
+    document.getElementById('textoAlertaGlobal').textContent = msg;
+    document.getElementById('bannerAlertaGlobal').style.display = 'flex';
+}
+
+function cerrarBannerAlerta() {
+    document.getElementById('bannerAlertaGlobal').style.display = 'none';
+}
+
+function verificarAlarmasTiempoReal() {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
 
-    const condicion = usuario.perfil.enfermedad || 'general';
-    const edad = parseInt(usuario.perfil.edad, 10) || 30;
-    const plan = CONTENIDO_SALUD[condicion] || CONTENIDO_SALUD.general;
+    const ahora = new Date();
+    let cambios = false;
 
-    // Adaptación adicional por rango de edad
-    let notaEdad = 'Adulto joven/medio: mantén intensidad moderada y constante.';
-    if (edad >= 60) {
-        notaEdad = `Adulto mayor (${edad} años): prioriza ejercicios de bajo impacto, equilibrio y control médico previo.`;
-    } else if (edad < 18) {
-        notaEdad = `Etapa juvenil (${edad} años): enfócate en deportes recreativos, hidratación y desarrollo postural.`;
-    }
+    usuario.citas.forEach(c => {
+        if (!c.fecha || !c.hora) return;
+        const diff = (new Date(`${c.fecha}T${c.hora}:00`) - ahora) / 60000;
+        if (diff > 30 && diff <= 1440 && !c.alerta1DiaEnviada) {
+            c.alerta1DiaEnviada = true;
+            cambios = true;
+            reproducirSonidoAlerta();
+            mostrarBannerAlerta(`📅 Cita mañana: ${c.especialidad} a las ${c.hora} (${c.lugar}).`);
+        }
+        if (diff > 0 && diff <= 30 && !c.alerta30MinEnviada) {
+            c.alerta30MinEnviada = true;
+            cambios = true;
+            reproducirSonidoAlerta();
+            mostrarBannerAlerta(`⏰ ¡Cita en ${Math.ceil(diff)} min! ${c.especialidad} a las ${c.hora}.`);
+        }
+    });
 
-    document.getElementById('encabezadoBienestar').innerHTML = `
-        <strong style="color:#1a5632; font-size:16px;">🎯 Plan Personalizado: ${plan.titulo}</strong>
-        <p style="margin:5px 0 0 0; font-size:13px; color:#333;"><strong>Enfoque por edad (${edad} años):</strong> ${notaEdad}</p>
-    `;
+    usuario.medicamentos.forEach(m => {
+        if (!m.proximaToma || m.cantidad <= 0) return;
+        const diff = (new Date(m.proximaToma) - ahora) / 60000;
+        if (diff > 0 && diff <= 30 && !m.alerta30Enviada) {
+            m.alerta30Enviada = true;
+            cambios = true;
+            reproducirSonidoAlerta();
+            mostrarBannerAlerta(`💊 En ${Math.ceil(diff)} min debes tomar: ${m.nombre}.`);
+        }
+        if (diff <= 0 && diff >= -20 && !m.alertaHoraEnviada) {
+            m.alertaHoraEnviada = true;
+            cambios = true;
+            reproducirSonidoAlerta();
+            mostrarBannerAlerta(`🚨 ¡Hora de tu medicina! Toma ahora: ${m.nombre}.`);
+        }
+    });
 
-    // 1. Renderizar 3 Videos de Salud
-    document.getElementById('contenedorVideosSalud').innerHTML = plan.videos.map((vid, idx) => `
-        <div class="video-card">
-            <iframe src="${vid.urlEmbed}" title="${escaparHTML(vid.titulo)}" allowfullscreen loading="lazy"></iframe>
-            <div style="padding:10px;">
-                <span style="font-size:11px; color:#1a5632; font-weight:bold;">VIDEO ${idx + 1} DE 3</span>
-                <h4 style="margin:4px 0 8px 0; font-size:14px;">${escaparHTML(vid.titulo)}</h4>
-                <a href="${vid.urlDirecta}" target="_blank" rel="noopener">
-                    <button type="button" class="btn-eps">Abrir en YouTube ↗</button>
-                </a>
-            </div>
-        </div>
-    `).join('');
-
-    // 2. Renderizar Alimentación y Cuidados
-    document.getElementById('contenedorAlimentacion').innerHTML = `
-        <ul style="margin:0; padding-left:20px; line-height:1.6; font-size:14px;">
-            ${plan.alimentacion.map(tip => `<li>${escaparHTML(tip)}</li>`).join('')}
-        </ul>
-    `;
-
-    // 3. Renderizar Deportes Recomendados
-    document.getElementById('contenedorDeportes').innerHTML = plan.deportes.map(dep => `
-        <div class="deporte-card">
-            <h4 style="margin:0 0 6px 0; color:#1a5632;">🏅 ${escaparHTML(dep.nombre)}</h4>
-            <p style="margin:0; font-size:13px; color:#333;">${escaparHTML(dep.detalle)}</p>
-        </div>
-    `).join('');
+    if (cambios) actualizarUsuarioActivo(usuario);
 }
 
 // =========================================================================
-// 11. UTILIDADES, COMPRESIÓN DE IMÁGENES Y EXPORTACIÓN
+// 10. UTILIDADES GENERALES
 // =========================================================================
-function comprimirImagen(file, maxWidth = 600, quality = 0.7) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-
-                if (width > maxWidth) {
-                    height = Math.round((height * maxWidth) / width);
-                    width = maxWidth;
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', quality));
-            };
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
+function registrarTomaMedicamento(id) {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) return;
+    const med = usuario.medicamentos.find(m => m.id === id);
+    if (med && med.cantidad > 0) {
+        med.cantidad -= 1;
+        med.proximaToma = obtenerHoraFuturaISO(480);
+        med.alerta30Enviada = false;
+        med.alertaHoraEnviada = false;
+        actualizarUsuarioActivo(usuario);
+        renderizarTodo();
+    }
 }
 
 function eliminarItemUsuario(coleccion, id) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
-    usuario[coleccion] = usuario[coleccion].filter(item => item.id !== id);
+    usuario[coleccion] = usuario[coleccion].filter(x => x.id !== id);
     actualizarUsuarioActivo(usuario);
     renderizarTodo();
 }
@@ -1155,50 +1120,83 @@ function eliminarItemUsuario(coleccion, id) {
 function alternarRecomendacionUsuario(id) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
-    const item = usuario.recomendaciones.find(r => r.id === id);
-    if (item) {
-        item.completada = !item.completada;
+    const rec = usuario.recomendaciones.find(r => r.id === id);
+    if (rec) {
+        rec.completada = !rec.completada;
         actualizarUsuarioActivo(usuario);
         renderizarRecomendaciones(usuario);
     }
 }
 
+function abrirModalDocumento(id) {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) return;
+    const doc = usuario.documentos.find(d => d.id === id);
+    if (!doc) return;
+    document.getElementById('modalDocTitulo').textContent = `${doc.nombreArchivo} (${doc.fecha})`;
+    document.getElementById('modalDocCuerpo').innerHTML = `
+        ${doc.imagenDataURL ? `<img src="${doc.imagenDataURL}" style="max-width:100%; border-radius:8px; margin-bottom:10px;">` : ''}
+        <pre style="background:#f6faf7; padding:10px; border-radius:8px; white-space:pre-wrap; font-size:12px;">${escaparHTML(doc.textoExtraido)}</pre>
+    `;
+    document.getElementById('modalDocumento').style.display = 'flex';
+}
+
+function cerrarModalDocumento() {
+    document.getElementById('modalDocumento').style.display = 'none';
+}
+
 function exportarHistorialUsuario() {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
-    const copiaSegura = { ...usuario, password: '***' };
-    const blob = new Blob([JSON.stringify(copiaSegura, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ ...usuario, password: '***' }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Historial_MiSalud_${usuario.usuario}_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `MiSalud_${usuario.usuario}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }
 
+function comprimirImagen(file, maxWidth = 600, quality = 0.7) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > maxWidth) { h = Math.round((h * maxWidth) / w); w = maxWidth; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
 function sumarDias(fechaISO, dias) {
-    const fecha = new Date(fechaISO + 'T00:00:00');
-    fecha.setDate(fecha.getDate() + (parseInt(dias, 10) || 0));
-    return fecha.toISOString().split('T')[0];
+    const f = new Date(fechaISO + 'T00:00:00');
+    f.setDate(f.getDate() + (parseInt(dias, 10) || 0));
+    return f.toISOString().split('T')[0];
 }
 
-function obtenerHoraFuturaISO(minutosASumar) {
-    const fecha = new Date(Date.now() + minutosASumar * 60000);
-    const offset = fecha.getTimezoneOffset() * 60000;
-    return new Date(fecha.getTime() - offset).toISOString().slice(0, 16);
+function obtenerHoraFuturaISO(mins) {
+    const f = new Date(Date.now() + mins * 60000);
+    return new Date(f.getTime() - f.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
-function escaparHTML(texto) {
+function escaparHTML(txt) {
     const div = document.createElement('div');
-    div.textContent = texto || '';
+    div.textContent = txt || '';
     return div.innerHTML;
 }
 
 function nuevo_archivo() {
-    const fileInput = document.getElementById('fileInput');
-    const newFileInput = fileInput.cloneNode(true);
-    fileInput.parentNode.replaceChild(newFileInput, fileInput);
-
+    const fi = document.getElementById('fileInput');
+    fi.value = '';
+    document.getElementById('dropZoneTexto').textContent = 'Selecciona o arrastra tu archivo aquí (PDF, JPG, PNG)';
     document.getElementById('result').textContent = '';
     document.getElementById('preview').innerHTML = '';
     document.getElementById('panelConfirmacionDatos').style.display = 'none';
